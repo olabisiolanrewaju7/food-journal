@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Salad } from 'lucide-react'
+import { Salad, LogOut } from 'lucide-react'
+import { useSession, signOut } from 'next-auth/react'
 import CameraCapture from '@/components/CameraCapture'
 import FoodAnalysisResult from '@/components/FoodAnalysisResult'
 import FoodLogList from '@/components/FoodLogList'
@@ -9,13 +10,14 @@ import MacroProgressBars from '@/components/MacroProgressBars'
 import { FoodAnalysis, FoodEntry } from '@/types'
 
 export default function HomePage() {
+  const { data: session } = useSession()
   const [entries, setEntries] = useState<FoodEntry[]>([])
   const [pendingAnalysis, setPendingAnalysis] = useState<{ analysis: FoodAnalysis; imageDataUrl: string } | null>(null)
   const today = new Date().toISOString().split('T')[0]
 
   const fetchEntries = useCallback(async () => {
     const res = await fetch(`/api/log?date=${today}`)
-    setEntries(await res.json())
+    if (res.ok) setEntries(await res.json())
   }, [today])
 
   useEffect(() => { fetchEntries() }, [fetchEntries])
@@ -25,7 +27,6 @@ export default function HomePage() {
       {/* Header */}
       <div className="relative px-5 pt-14 pb-8 overflow-hidden"
         style={{ background: 'linear-gradient(135deg, #004d1a 0%, #007a2e 60%, #00c853 100%)' }}>
-        {/* Decorative circle */}
         <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-10"
           style={{ background: 'radial-gradient(circle, #ffffff, transparent)' }} />
         <div className="relative flex items-center justify-between">
@@ -41,6 +42,19 @@ export default function HomePage() {
               {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
             </p>
           </div>
+          {session?.user && (
+            <div className="flex flex-col items-end gap-2">
+              <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}>
+                {session.user.name?.[0]?.toUpperCase() ?? '?'}
+              </div>
+              <button onClick={() => signOut({ callbackUrl: '/login' })}
+                className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest"
+                style={{ color: 'rgba(255,255,255,0.6)' }}>
+                <LogOut className="w-3 h-3" /> Sign out
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

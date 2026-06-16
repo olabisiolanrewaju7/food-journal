@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import { Suspense } from 'react'
 import './globals.css'
 import BottomNav from '@/components/BottomNav'
+import Providers from '@/components/Providers'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -16,10 +17,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${inter.className} min-h-screen`} style={{ background: '#c8e6c9', color: '#1a1a1a' }}>
-        <div className="max-w-md mx-auto pb-24">
-          {children}
-        </div>
-        <Suspense><BottomNav /></Suspense>
+        <Providers>
+          <div className="max-w-md mx-auto pb-24">
+            {children}
+          </div>
+          <Suspense><BottomNav /></Suspense>
+        </Providers>
       </body>
     </html>
   )

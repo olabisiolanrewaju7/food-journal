@@ -1,39 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { anthropic } from '@/lib/anthropic'
 import { getDailySummaries, getRecentEntries } from '@/database/db'
 import { rateLimit } from '@/lib/rateLimit'
 
 const Schema = z.object({
-  // M-3: cap and strip control chars from goal
   goal: z.string().max(200).transform(s => s.replace(/[\x00-\x1f\x7f]/g, '').trim()).optional(),
 })
 
 export async function POST(req: NextRequest) {
-  // L-1: Content-Type check
-  if (!req.headers.get('content-type')?.includes('application/json')) {
+  if (!req.headers.get('content-type')?.includes('application/json'))
     return NextResponse.json({ error: 'Unsupported Media Type' }, { status: 415 })
-  }
 
-  // H-2: Rate limit — 10 requests per minute per IP
+  const session = await getServerSession(authOptions)
+  const userId = Number((session?.user as any)?.id)
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const ip = req.headers.get('x-forwarded-for') ?? 'local'
-  if (!rateLimit(`advice:${ip}`, 10, 60_000)) {
+  if (!rateLimit(`advice:${ip}`, 10, 60_000))
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
-  }
 
   let body: unknown
   try { body = await req.json() } catch { body = {} }
 
   const parsed = Schema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
-  }
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 
   const goal = parsed.data.goal ?? ''
 
   try {
-    const summaries = getDailySummaries(7)
-    const recentEntries = getRecentEntries(7)
+    const summaries = getDailySummaries(userId, 7)
+    const recentEntries = getRecentEntries(userId, 7)
 
     if (recentEntries.length === 0) {
       return NextResponse.json({

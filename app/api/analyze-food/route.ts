@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { anthropic } from '@/lib/anthropic'
 import { rateLimit } from '@/lib/rateLimit'
 
@@ -34,6 +36,10 @@ export async function POST(req: NextRequest) {
   if (!req.headers.get('content-type')?.includes('application/json')) {
     return NextResponse.json({ error: 'Unsupported Media Type' }, { status: 415 })
   }
+
+  // H-1: Auth check
+  const session = await getServerSession(authOptions)
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   // H-2: Rate limit — 20 requests per minute per IP
   const ip = req.headers.get('x-forwarded-for') ?? 'local'
