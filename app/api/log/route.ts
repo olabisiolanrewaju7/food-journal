@@ -1,39 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { getEntriesByDate, insertEntry, deleteEntry } from '@/database/db'
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+
+const PostSchema = z.object({
+  food_name:   z.string().min(1).max(200),
+  description: z.string().max(500).optional().default(''),
+  calories:    z.number().min(0).max(10_000),
+  protein:     z.number().min(0).max(1_000),
+  carbs:       z.number().min(0).max(2_000),
+  fat:         z.number().min(0).max(1_000),
+  fiber:       z.number().min(0).max(500),
+  timestamp:   z.string().datetime().optional(),
+  // M-5: cap image_data at ~8 MB base64
+  image_data:  z.string().max(11_000_000).optional(),
+})
+
 export async function GET(req: NextRequest) {
-  const date = req.nextUrl.searchParams.get('date') || new Date().toISOString().split('T')[0]
-  const entries = getEntriesByDate(date)
-  return NextResponse.json(entries)
+  const dateParam = req.nextUrl.searchParams.get('date') ?? new Date().toISOString().split('T')[0]
+  const date = ISO_DATE.test(dateParam) ? dateParam : new Date().toISOString().split('T')[0]
+  return NextResponse.json(getEntriesByDate(date))
 }
 
 export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json()
-    const { food_name, description, calories, protein, carbs, fat, fiber, timestamp, image_data } = body
+  // L-1: Content-Type check
+  if (!req.headers.get('content-type')?.includes('application/json')) {
+    return NextResponse.json({ error: 'Unsupported Media Type' }, { status: 415 })
+  }
 
+  let body: unknown
+  try { body = await req.json() } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const parsed = PostSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 })
+  }
+
+  try {
+    const { food_name, description, calories, protein, carbs, fat, fiber, timestamp, image_data } = parsed.data
     const id = insertEntry({
-      timestamp: timestamp || new Date().toISOString(),
+      timestamp: timestamp ?? new Date().toISOString(),
       food_name,
-      description: description || '',
-      calories: Number(calories),
-      protein: Number(protein),
-      carbs: Number(carbs),
-      fat: Number(fat),
-      fiber: Number(fiber),
+      description,
+      calories,
+      protein,
+      carbs,
+      fat,
+      fiber,
       image_data,
     })
-
     return NextResponse.json({ id, success: true })
   } catch (err) {
-    console.error('log POST error:', err)
+    console.error('log POST error:', err instanceof Error ? err.message : 'unknown')
     return NextResponse.json({ error: 'Failed to save entry' }, { status: 500 })
   }
 }
 
 export async function DELETE(req: NextRequest) {
-  const id = req.nextUrl.searchParams.get('id')
-  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
-  deleteEntry(Number(id))
+  const idParam = req.nextUrl.searchParams.get('id')
+  const id = Number(idParam)
+  if (!idParam || !Number.isInteger(id) || id <= 0) {
+    return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
+  }
+  deleteEntry(id)
   return NextResponse.json({ success: true })
 }

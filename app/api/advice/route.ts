@@ -1,11 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { anthropic } from '@/lib/anthropic'
 import { getDailySummaries, getRecentEntries } from '@/database/db'
+import { rateLimit } from '@/lib/rateLimit'
+
+const Schema = z.object({
+  // M-3: cap and strip control chars from goal
+  goal: z.string().max(200).transform(s => s.replace(/[\x00-\x1f\x7f]/g, '').trim()).optional(),
+})
 
 export async function POST(req: NextRequest) {
-  try {
-    const { goal } = await req.json().catch(() => ({ goal: '' }))
+  // L-1: Content-Type check
+  if (!req.headers.get('content-type')?.includes('application/json')) {
+    return NextResponse.json({ error: 'Unsupported Media Type' }, { status: 415 })
+  }
 
+  // H-2: Rate limit — 10 requests per minute per IP
+  const ip = req.headers.get('x-forwarded-for') ?? 'local'
+  if (!rateLimit(`advice:${ip}`, 10, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
+  let body: unknown
+  try { body = await req.json() } catch { body = {} }
+
+  const parsed = Schema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+  }
+
+  const goal = parsed.data.goal ?? ''
+
+  try {
     const summaries = getDailySummaries(7)
     const recentEntries = getRecentEntries(7)
 
@@ -28,7 +54,7 @@ Recent meals (last 7 days):
 ${JSON.stringify(recentEntries.slice(0, 30), null, 2)}
 
 Average daily calories: ${avgCalories}
-My goal: ${goal || 'general health and balanced nutrition'}
+My goal: [${goal || 'general health and balanced nutrition'}]
 
 Please provide personalized dietary advice in exactly 3 sections with these headers:
 ## What's Going Well
@@ -51,7 +77,7 @@ Keep the total response under 400 words. Reference my actual food choices and nu
     const advice = response.content[0].type === 'text' ? response.content[0].text : ''
     return NextResponse.json({ advice })
   } catch (err) {
-    console.error('advice error:', err)
+    console.error('advice error:', err instanceof Error ? err.message : 'unknown')
     return NextResponse.json({ error: 'Failed to generate advice' }, { status: 500 })
   }
 }
