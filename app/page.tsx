@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Salad, LogOut } from 'lucide-react'
-import { useSession, signOut } from 'next-auth/react'
+import { Salad } from 'lucide-react'
 import CameraCapture from '@/components/CameraCapture'
 import FoodAnalysisResult from '@/components/FoodAnalysisResult'
 import FoodLogList from '@/components/FoodLogList'
@@ -10,7 +9,6 @@ import MacroProgressBars from '@/components/MacroProgressBars'
 import { FoodAnalysis, FoodEntry } from '@/types'
 
 export default function HomePage() {
-  const { data: session } = useSession()
   const [entries, setEntries] = useState<FoodEntry[]>([])
   const [pendingAnalysis, setPendingAnalysis] = useState<{ analysis: FoodAnalysis; imageDataUrl: string } | null>(null)
   const today = new Date().toISOString().split('T')[0]
@@ -42,19 +40,6 @@ export default function HomePage() {
               {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
             </p>
           </div>
-          {session?.user && (
-            <div className="flex flex-col items-end gap-2">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-                style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}>
-                {session.user.name?.[0]?.toUpperCase() ?? '?'}
-              </div>
-              <button onClick={() => signOut({ callbackUrl: '/login' })}
-                className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest"
-                style={{ color: 'rgba(255,255,255,0.6)' }}>
-                <LogOut className="w-3 h-3" /> Sign out
-              </button>
-            </div>
-          )}
         </div>
       </div>
 

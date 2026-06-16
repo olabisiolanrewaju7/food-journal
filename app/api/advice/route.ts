@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { anthropic } from '@/lib/anthropic'
 import { getDailySummaries, getRecentEntries } from '@/database/db'
 import { rateLimit } from '@/lib/rateLimit'
+
+const USER_ID = 1
 
 const Schema = z.object({
   goal: z.string().max(200).transform(s => s.replace(/[\x00-\x1f\x7f]/g, '').trim()).optional(),
@@ -13,10 +13,6 @@ const Schema = z.object({
 export async function POST(req: NextRequest) {
   if (!req.headers.get('content-type')?.includes('application/json'))
     return NextResponse.json({ error: 'Unsupported Media Type' }, { status: 415 })
-
-  const session = await getServerSession(authOptions)
-  const userId = Number((session?.user as any)?.id)
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const ip = req.headers.get('x-forwarded-for') ?? 'local'
   if (!rateLimit(`advice:${ip}`, 10, 60_000))
@@ -31,8 +27,8 @@ export async function POST(req: NextRequest) {
   const goal = parsed.data.goal ?? ''
 
   try {
-    const summaries = getDailySummaries(userId, 7)
-    const recentEntries = getRecentEntries(userId, 7)
+    const summaries = getDailySummaries(USER_ID, 7)
+    const recentEntries = getRecentEntries(USER_ID, 7)
 
     if (recentEntries.length === 0) {
       return NextResponse.json({

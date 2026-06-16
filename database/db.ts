@@ -36,6 +36,15 @@ function getDb(): Database.Database {
       CREATE INDEX IF NOT EXISTS idx_timestamp ON food_entries(timestamp);
       CREATE INDEX IF NOT EXISTS idx_user_date ON food_entries(user_id, timestamp);
     `)
+    // Migrate: add user_id column if missing (for DBs created before auth was added)
+    const cols = (_db.prepare(`PRAGMA table_info(food_entries)`).all() as { name: string }[]).map(c => c.name)
+    if (!cols.includes('user_id')) {
+      _db.exec(`ALTER TABLE food_entries ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1`)
+    }
+    // Ensure default user (id=1) exists
+    _db.prepare(`
+      INSERT OR IGNORE INTO users (id, name, email, password_hash) VALUES (1, 'User', 'user@local', '')
+    `).run()
   }
   return _db
 }
