@@ -1,0 +1,57 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { anthropic } from '@/lib/anthropic'
+import { getDailySummaries, getRecentEntries } from '@/database/db'
+
+export async function POST(req: NextRequest) {
+  try {
+    const { goal } = await req.json().catch(() => ({ goal: '' }))
+
+    const summaries = getDailySummaries(7)
+    const recentEntries = getRecentEntries(7)
+
+    if (recentEntries.length === 0) {
+      return NextResponse.json({
+        advice: "You haven't logged any meals yet! Start by photographing your food to get personalized advice based on your actual eating patterns.",
+      })
+    }
+
+    const avgCalories = summaries.length > 0
+      ? Math.round(summaries.reduce((s: number, d: any) => s + d.calories, 0) / summaries.length)
+      : 0
+
+    const prompt = `Here is my food log from the past 7 days:
+
+Daily summaries:
+${JSON.stringify(summaries, null, 2)}
+
+Recent meals (last 7 days):
+${JSON.stringify(recentEntries.slice(0, 30), null, 2)}
+
+Average daily calories: ${avgCalories}
+My goal: ${goal || 'general health and balanced nutrition'}
+
+Please provide personalized dietary advice in exactly 3 sections with these headers:
+## What's Going Well
+(2-3 specific positives based on my actual data)
+
+## Areas to Improve
+(2-3 specific, actionable recommendations with target numbers)
+
+## This Week's Focus
+(1 concrete habit to implement, be very specific)
+
+Keep the total response under 400 words. Reference my actual food choices and numbers.`
+
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 800,
+      messages: [{ role: 'user', content: prompt }],
+    })
+
+    const advice = response.content[0].type === 'text' ? response.content[0].text : ''
+    return NextResponse.json({ advice })
+  } catch (err) {
+    console.error('advice error:', err)
+    return NextResponse.json({ error: 'Failed to generate advice' }, { status: 500 })
+  }
+}
