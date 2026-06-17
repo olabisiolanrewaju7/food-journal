@@ -24,15 +24,19 @@ export default function RegisterPage() {
       })
 
       if (!res.ok) {
-        const data = await res.json()
-        setError(data.error ?? 'Registration failed')
+        let message = `Server error (${res.status})`
+        try {
+          const data = await res.json()
+          message = data.error ?? message
+        } catch { /* response wasn't JSON */ }
+        setError(message)
         return
       }
 
       // Hard redirect to login — user signs in with their new credentials
       window.location.href = '/login?registered=1'
-    } catch {
-      setError('Network error — please try again')
+    } catch (err) {
+      setError(`Network error — ${err instanceof Error ? err.message : 'please try again'}`)
     } finally {
       setLoading(false)
     }
