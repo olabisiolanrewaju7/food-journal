@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Salad } from 'lucide-react'
 import Link from 'next/link'
@@ -32,9 +31,8 @@ export default function RegisterPage() {
       return
     }
 
-    // Auto sign in after registration
-    await signIn('credentials', { email, password, redirect: false })
-    router.push('/')
+    // Redirect to login — user signs in with their new credentials
+    router.push('/login?registered=1')
   }
 
   return (

@@ -2,12 +2,15 @@
 
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Salad } from 'lucide-react'
 import Link from 'next/link'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const justRegistered = searchParams.get('registered') === '1'
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -41,6 +44,12 @@ export default function LoginPage() {
       <div className="flex-1 px-5 py-8">
         <div className="bg-white rounded-2xl p-6" style={{ boxShadow: '0 2px 12px rgba(26,61,43,0.08)' }}>
           <h2 className="text-lg font-bold mb-5" style={{ color: '#1a3d2b' }}>Sign in</h2>
+
+          {justRegistered && (
+            <div className="mb-4 p-3 rounded-xl text-sm font-medium" style={{ background: '#f0fdf4', color: '#15803d' }}>
+              Account created! Sign in to get started.
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 p-3 rounded-xl text-sm font-medium" style={{ background: '#fef2f2', color: '#dc2626' }}>
