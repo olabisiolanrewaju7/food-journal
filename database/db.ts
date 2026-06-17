@@ -4,7 +4,9 @@ function getDb(): Client {
   const url = process.env.TURSO_DATABASE_URL
   const authToken = process.env.TURSO_AUTH_TOKEN
   if (!url) throw new Error('TURSO_DATABASE_URL environment variable is not set')
-  return createClient({ url, authToken })
+  // Force HTTP transport (libsql:// uses WebSockets which are unreliable in serverless)
+  const httpUrl = url.replace(/^libsql:\/\//, 'https://')
+  return createClient({ url: httpUrl, authToken })
 }
 
 // ── Users ────────────────────────────────────────────────────────────────────
