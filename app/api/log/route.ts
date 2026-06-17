@@ -20,7 +20,7 @@ const PostSchema = z.object({
 
 async function getUserId(): Promise<number | null> {
   const session = await getServerSession(authOptions)
-  const id = Number((session?.user as any)?.id)
+  const id = Number(session?.user?.id)
   return id > 0 ? id : null
 }
 

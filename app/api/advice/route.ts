@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unsupported Media Type' }, { status: 415 })
 
   const session = await getServerSession(authOptions)
-  const userId = Number((session?.user as any)?.id)
+  const userId = Number(session?.user?.id)
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const ip = req.headers.get('x-forwarded-for') ?? 'local'
