@@ -16,21 +16,26 @@ export default function RegisterPage() {
     setLoading(true)
     setError('')
 
-    const res = await fetch('/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
-    })
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      })
 
-    if (!res.ok) {
-      const data = await res.json()
-      setError(data.error ?? 'Registration failed')
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error ?? 'Registration failed')
+        return
+      }
+
+      // Hard redirect to login — user signs in with their new credentials
+      window.location.href = '/login?registered=1'
+    } catch {
+      setError('Network error — please try again')
+    } finally {
       setLoading(false)
-      return
     }
-
-    // Hard redirect to login — user signs in with their new credentials
-    window.location.href = '/login?registered=1'
   }
 
   return (
