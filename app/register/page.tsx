@@ -1,12 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Salad } from 'lucide-react'
 import Link from 'next/link'
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -31,8 +29,8 @@ export default function RegisterPage() {
       return
     }
 
-    // Redirect to login — user signs in with their new credentials
-    router.push('/login?registered=1')
+    // Hard redirect to login — user signs in with their new credentials
+    window.location.href = '/login?registered=1'
   }
 
   return (
