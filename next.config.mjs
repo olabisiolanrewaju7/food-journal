@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Automatically set NEXTAUTH_URL to the Vercel deployment URL
+  env: {
+    NEXTAUTH_URL: process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXTAUTH_URL,
+  },
   async headers() {
     return [
       {
