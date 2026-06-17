@@ -19,6 +19,9 @@ export default function BottomNav() {
   useEffect(() => setMounted(true), [])
   if (!mounted) return null
 
+  const hideOn = ['/login', '/register', '/splash']
+  if (hideOn.includes(pathname)) return null
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white safe-area-pb"
       style={{ boxShadow: '0 -1px 0 #e8e0d4, 0 -8px 24px rgba(26,61,43,0.06)' }}>
