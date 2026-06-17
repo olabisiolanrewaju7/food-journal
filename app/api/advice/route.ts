@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
     }
 
     const avgCalories = summaries.length > 0
-      ? Math.round(summaries.reduce((s: number, d: any) => s + Number(d.calories), 0) / summaries.length)
+      ? Math.round(// eslint-disable-next-line @typescript-eslint/no-explicit-any
+      summaries.reduce((s: number, d: any) => s + Number(d.calories), 0) / summaries.length)
       : 0
 
     const prompt = `Here is my food log from the past 7 days:

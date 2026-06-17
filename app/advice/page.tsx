@@ -55,7 +55,7 @@ export default function AdvicePage() {
       <div className="px-4 space-y-4 pb-4">
         <div className="rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 space-y-3">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            What's your goal? (optional)
+            What&apos;s your goal? (optional)
           </label>
           <input
             type="text"

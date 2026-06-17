@@ -59,7 +59,7 @@ export default function CoachPage() {
       <div className="px-4 pt-4 space-y-3 pb-4">
         <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 2px 12px rgba(26,61,43,0.08)' }}>
           <div className="px-4 pt-4 pb-3">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9c8e7e' }}>What's your goal?</p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9c8e7e' }}>What&apos;s your goal?</p>
             <input
               type="text" value={goal} onChange={e => setGoal(e.target.value)}
               placeholder="e.g. lose weight, build muscle..."
