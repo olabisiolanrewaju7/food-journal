@@ -15,12 +15,12 @@ export default function NutritionChart({ data }: { data: DailySummary[] }) {
 
   const tick = { fontSize: 10, fill: '#b5a99a' }
 
-  const Tip = ({ active, payload, label }: any) => {
+  const Tip = ({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string }) => {
     if (!active || !payload?.length) return null
     return (
       <div className="bg-white rounded-xl p-3 text-xs" style={{ boxShadow: '0 4px 16px rgba(26,61,43,0.15)', border: '1px solid #f0ebe3' }}>
         <p className="font-bold mb-1" style={{ color: '#004d1a' }}>{label}</p>
-        {payload.map((p: any) => (
+        {payload.map((p) => (
           <p key={p.name} className="font-medium" style={{ color: p.color }}>{p.name}: {p.value}{p.name === 'Calories' ? ' kcal' : 'g'}</p>
         ))}
       </div>

@@ -26,7 +26,7 @@ export default function FoodLogList({ entries, onDelete }: Props) {
 
   return (
     <div className="space-y-3">
-      <p className="text-xs font-bold uppercase tracking-widest px-1" style={{ color: '#9c8e7e' }}>Today's Meals</p>
+      <p className="text-xs font-bold uppercase tracking-widest px-1" style={{ color: '#9c8e7e' }}>Today&apos;s Meals</p>
       {entries.map(entry => (
         <div key={entry.id} className="flex gap-3 p-3 rounded-2xl bg-white"
           style={{ boxShadow: '0 2px 12px rgba(26,61,43,0.07)', border: '1px solid #f0ebe3' }}>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Flame, Dumbbell, Wheat, Droplets, Leaf } from 'lucide-react'
+import { Dumbbell, Wheat, Droplets, Leaf } from 'lucide-react'
 import { FoodEntry } from '@/types'
 
 const DEFAULT_GOALS = { calories: 2000, protein: 150, carbs: 250, fat: 65, fiber: 30 }
@@ -55,7 +55,7 @@ export default function MacroProgressBars({ entries }: { entries: FoodEntry[] })
 
       {/* Macro circles */}
       <div className="grid grid-cols-4 divide-x" style={{ borderColor: '#f5f0e8' }}>
-        {macros.map(({ key, label, icon: Icon, color, track }) => {
+        {macros.map(({ key, label, color, track }) => {
           const val = Math.round(totals[key])
           const goal = goals[key]
           const pct = Math.min((val / goal) * 100, 100)
