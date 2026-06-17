@@ -28,25 +28,32 @@ npx tsc --noEmit     # Type-check without building
 ANTHROPIC_API_KEY=...
 NEXTAUTH_SECRET=...        # generate with: openssl rand -base64 32
 NEXTAUTH_URL=http://localhost:3000
+TURSO_DATABASE_URL=libsql://...
+TURSO_AUTH_TOKEN=...
 ```
+
+On Vercel, `NEXTAUTH_URL` is auto-derived from `VERCEL_URL` in `next.config.mjs` — do not override it there.
 
 ## Architecture
 
-**Next.js 14 App Router** with SQLite, NextAuth (JWT sessions), and Claude vision.
+**Next.js 14 App Router** with Turso (hosted SQLite), NextAuth v4 (JWT sessions), and Claude vision.
 
 ### Authentication
 
 - NextAuth credentials provider with bcrypt-hashed passwords (`lib/auth.ts`)
 - `middleware.ts` redirects unauthenticated users to `/login` — covers all routes except `/login`, `/register`, `/api/auth`, `/api/register`
 - Session is JWT; `user.id` is stored in the token and available via `getServerSession(authOptions)` in API routes
+- `types/next-auth.d.ts` extends NextAuth types to include `session.user.id` — do not remove
 - All DB queries are scoped to `user_id` — never query without it
+- `app/layout.tsx` exports `dynamic = 'force-dynamic'` — required for NextAuth to work on Vercel (prevents static pre-rendering which has no request URL)
+- After registration, redirect with `window.location.href` not `router.push` — the latter silently fails in this context
 
 ### Data Flow
 
 1. User photographs food → `CameraCapture.tsx` base64-encodes via `FileReader`
 2. Client POSTs `{ imageBase64, mimeType }` to `/api/analyze-food`
 3. Server validates MIME allowlist + magic bytes, then calls Claude vision (`claude-sonnet-4-6`) → returns `{ food_name, description, calories, protein, carbs, fat, fiber }`
-4. User confirms → POST to `/api/log` → saved to SQLite with `user_id`
+4. User confirms → POST to `/api/log` → saved to Turso with `user_id`
 5. Home page refreshes from `/api/log?date=YYYY-MM-DD`
 
 ### API Routes
@@ -57,21 +64,21 @@ All POST routes require `Content-Type: application/json` and a valid session. In
 - `GET|POST|DELETE /api/log` — CRUD for food entries, scoped to session user
 - `GET /api/daily-summary?days=N` — N clamped to 1–365
 - `POST /api/advice` — rate-limited (10/min per IP); sanitises `goal` string before prompt injection
-- `POST /api/register` — public; creates user with bcrypt hash
+- `POST /api/register` — public; creates user with bcrypt hash (cost 10)
 - `GET|POST /api/auth/[...nextauth]` — NextAuth handler
 
 ### Database (`database/db.ts`)
 
-SQLite file at `healthyyou.db` (auto-created). `better-sqlite3` is synchronous — no async/await in DB calls. Two tables:
+All functions are **async** — uses `@libsql/client` (Turso). No synchronous DB calls anywhere.
 
 - `users` — id, name, email (unique), password_hash
-- `food_entries` — scoped to `user_id` via FK; includes `image_data` (TEXT, capped at ~8 MB)
-
-`next.config.mjs` has `serverComponentsExternalPackages: ['better-sqlite3']` — do not remove.
+- `food_entries` — scoped to `user_id`; includes `image_data` (TEXT, capped at ~8 MB via Zod)
+- `lastInsertRowid` from `@libsql/client` returns `BigInt` — always wrap with `Number()` before returning in JSON responses
+- No init/migration logic runs at request time — tables must already exist in Turso
 
 ### Rate Limiting
 
-`lib/rateLimit.ts` is a simple in-memory store (per-process). Suitable for single-instance deployments. For multi-instance, replace with Redis/Upstash.
+`lib/rateLimit.ts` is a simple in-memory store (per-process). On Vercel serverless each instance has its own counter — fine for current scale; replace with Redis/Upstash for multi-instance.
 
 ### Design System
 
@@ -83,7 +90,7 @@ SQLite file at `healthyyou.db` (auto-created). `better-sqlite3` is synchronous �
 
 ### BottomNav SSR Fix
 
-`BottomNav` guards with `const [mounted, setMounted] = useState(false)` and returns `null` until after hydration. This prevents `usePathname()` crashing during SSR inside Next.js error boundaries. Do not remove this guard.
+`BottomNav` guards with `const [mounted, setMounted] = useState(false)` and returns `null` until after hydration. This prevents `usePathname()` crashing during SSR. Do not remove this guard.
 
 ### User Goals & Profile
 
@@ -98,4 +105,4 @@ Stored in `localStorage`:
 Settings is a menu page (`app/settings/page.tsx`) linking to:
 - `/settings/goals` — nutrition targets
 - `/settings/bio` — personal profile
-- `/settings/payment` — Stripe placeholder (no raw card data stored — PCI compliance)
+- `/settings/payment` — Stripe placeholder (no raw card data stored)
