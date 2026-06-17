@@ -16,8 +16,19 @@ export default function HomePage() {
   const today = new Date().toISOString().split('T')[0]
 
   const fetchEntries = useCallback(async () => {
+    const cacheKey = `fj-entries-${today}`
+    // Show cached data instantly
+    try {
+      const cached = localStorage.getItem(cacheKey)
+      if (cached) setEntries(JSON.parse(cached))
+    } catch { /* ignore */ }
+    // Fetch fresh data in background
     const res = await fetch(`/api/log?date=${today}`)
-    if (res.ok) setEntries(await res.json())
+    if (res.ok) {
+      const data = await res.json()
+      setEntries(data)
+      try { localStorage.setItem(cacheKey, JSON.stringify(data)) } catch { /* ignore */ }
+    }
   }, [today])
 
   useEffect(() => { fetchEntries() }, [fetchEntries])

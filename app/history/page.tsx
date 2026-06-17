@@ -12,10 +12,20 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setLoading(true)
+    const cacheKey = `fj-summary-${days}`
+    // Show cached data instantly
+    try {
+      const cached = localStorage.getItem(cacheKey)
+      if (cached) { setSummaries(JSON.parse(cached)); setLoading(false) }
+    } catch { /* ignore */ }
+    // Fetch fresh in background
     fetch(`/api/daily-summary?days=${days}`)
       .then(r => r.json())
-      .then(data => { setSummaries(data); setLoading(false) })
+      .then(data => {
+        setSummaries(data)
+        setLoading(false)
+        try { localStorage.setItem(cacheKey, JSON.stringify(data)) } catch { /* ignore */ }
+      })
   }, [days])
 
   return (
