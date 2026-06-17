@@ -1,7 +1,5 @@
 import { createClient, type Client } from '@libsql/client'
 
-let _initialized = false
-
 function getDb(): Client {
   const url = process.env.TURSO_DATABASE_URL
   const authToken = process.env.TURSO_AUTH_TOKEN
@@ -9,44 +7,9 @@ function getDb(): Client {
   return createClient({ url, authToken })
 }
 
-async function ensureInit() {
-  if (_initialized) return
-  _initialized = true
-  const db = getDb()
-  await db.executeMultiple(`
-    CREATE TABLE IF NOT EXISTS users (
-      id            INTEGER PRIMARY KEY AUTOINCREMENT,
-      name          TEXT NOT NULL,
-      email         TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
-      created_at    TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-    CREATE TABLE IF NOT EXISTS food_entries (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id     INTEGER NOT NULL DEFAULT 1,
-      timestamp   TEXT NOT NULL,
-      food_name   TEXT NOT NULL,
-      description TEXT,
-      calories    REAL NOT NULL,
-      protein     REAL NOT NULL,
-      carbs       REAL NOT NULL,
-      fat         REAL NOT NULL,
-      fiber       REAL NOT NULL,
-      image_data  TEXT
-    );
-    CREATE INDEX IF NOT EXISTS idx_timestamp ON food_entries(timestamp);
-    CREATE INDEX IF NOT EXISTS idx_user_date ON food_entries(user_id, timestamp);
-  `)
-  await db.execute({
-    sql: `INSERT OR IGNORE INTO users (id, name, email, password_hash) VALUES (1, 'User', 'user@local', '')`,
-    args: [],
-  })
-}
-
 // ── Users ────────────────────────────────────────────────────────────────────
 
 export async function createUser(name: string, email: string, passwordHash: string) {
-  await ensureInit()
   const db = getDb()
   const result = await db.execute({
     sql: `INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)`,
@@ -56,7 +19,6 @@ export async function createUser(name: string, email: string, passwordHash: stri
 }
 
 export async function getUserByEmail(email: string) {
-  await ensureInit()
   const db = getDb()
   const result = await db.execute({
     sql: `SELECT * FROM users WHERE email = ?`,
@@ -86,7 +48,6 @@ export async function insertEntry(entry: {
   fiber: number
   image_data?: string
 }) {
-  await ensureInit()
   const db = getDb()
   const result = await db.execute({
     sql: `INSERT INTO food_entries (user_id, timestamp, food_name, description, calories, protein, carbs, fat, fiber, image_data)
@@ -101,7 +62,6 @@ export async function insertEntry(entry: {
 }
 
 export async function getEntriesByDate(userId: number, date: string) {
-  await ensureInit()
   const db = getDb()
   const result = await db.execute({
     sql: `SELECT * FROM food_entries WHERE user_id = ? AND timestamp LIKE ? ORDER BY timestamp ASC`,
@@ -111,7 +71,6 @@ export async function getEntriesByDate(userId: number, date: string) {
 }
 
 export async function deleteEntry(id: number, userId: number) {
-  await ensureInit()
   const db = getDb()
   await db.execute({
     sql: `DELETE FROM food_entries WHERE id = ? AND user_id = ?`,
@@ -120,7 +79,6 @@ export async function deleteEntry(id: number, userId: number) {
 }
 
 export async function getDailySummaries(userId: number, days: number) {
-  await ensureInit()
   const db = getDb()
   const result = await db.execute({
     sql: `SELECT
@@ -141,7 +99,6 @@ export async function getDailySummaries(userId: number, days: number) {
 }
 
 export async function getRecentEntries(userId: number, days: number) {
-  await ensureInit()
   const db = getDb()
   const result = await db.execute({
     sql: `SELECT * FROM food_entries
