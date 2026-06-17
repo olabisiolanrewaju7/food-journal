@@ -24,11 +24,16 @@ export async function POST(req: NextRequest) {
 
   const { name, email, password } = parsed.data
 
-  const existing = await getUserByEmail(email)
-  if (existing)
-    return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
+  try {
+    const existing = await getUserByEmail(email)
+    if (existing)
+      return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
 
-  const passwordHash = await bcrypt.hash(password, 8)
-  const id = await createUser(name, email, passwordHash)
-  return NextResponse.json({ id, success: true }, { status: 201 })
+    const passwordHash = await bcrypt.hash(password, 8)
+    const id = await createUser(name, email, passwordHash)
+    return NextResponse.json({ id, success: true }, { status: 201 })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: `Registration failed: ${message}` }, { status: 500 })
+  }
 }
