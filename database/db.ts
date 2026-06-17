@@ -43,6 +43,35 @@ async function ensureInit() {
   })
 }
 
+// ── Users ────────────────────────────────────────────────────────────────────
+
+export async function createUser(name: string, email: string, passwordHash: string) {
+  await ensureInit()
+  const db = getDb()
+  const result = await db.execute({
+    sql: `INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)`,
+    args: [name, email.toLowerCase(), passwordHash],
+  })
+  return Number(result.lastInsertRowid)
+}
+
+export async function getUserByEmail(email: string) {
+  await ensureInit()
+  const db = getDb()
+  const result = await db.execute({
+    sql: `SELECT * FROM users WHERE email = ?`,
+    args: [email.toLowerCase()],
+  })
+  const row = result.rows[0]
+  if (!row) return undefined
+  return {
+    id: Number(row.id),
+    name: String(row.name),
+    email: String(row.email),
+    password_hash: String(row.password_hash),
+  }
+}
+
 // ── Food entries ─────────────────────────────────────────────────────────────
 
 export async function insertEntry(entry: {

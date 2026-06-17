@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { anthropic } from '@/lib/anthropic'
 import { getDailySummaries, getRecentEntries } from '@/database/db'
 import { rateLimit } from '@/lib/rateLimit'
-
-const USER_ID = 1
 
 const Schema = z.object({
   goal: z.string().max(200).transform(s => s.replace(/[\x00-\x1f\x7f]/g, '').trim()).optional(),
@@ -13,6 +13,10 @@ const Schema = z.object({
 export async function POST(req: NextRequest) {
   if (!req.headers.get('content-type')?.includes('application/json'))
     return NextResponse.json({ error: 'Unsupported Media Type' }, { status: 415 })
+
+  const session = await getServerSession(authOptions)
+  const userId = Number((session?.user as any)?.id)
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const ip = req.headers.get('x-forwarded-for') ?? 'local'
   if (!rateLimit(`advice:${ip}`, 10, 60_000))
@@ -27,18 +31,20 @@ export async function POST(req: NextRequest) {
   const goal = parsed.data.goal ?? ''
 
   try {
-    const summaries = await getDailySummaries(USER_ID, 7)
-    const recentEntries = await getRecentEntries(USER_ID, 7)
+    const summaries = await getDailySummaries(userId, 7)
+    const recentEntries = await getRecentEntries(userId, 7)
 
     if (recentEntries.length === 0) {
       return NextResponse.json({
-        advice: "You haven't logged any meals yet! Start by photographing your food to get personalized advice based on your actual eating patterns.",
+        advice: "You haven&apos;t logged any meals yet! Start by photographing your food to get personalized advice based on your actual eating patterns.",
       })
     }
 
     const avgCalories = summaries.length > 0
-      ? Math.round(// eslint-disable-next-line @typescript-eslint/no-explicit-any
-      summaries.reduce((s: number, d: any) => s + Number(d.calories), 0) / summaries.length)
+      ? Math.round(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          summaries.reduce((s: number, d: any) => s + Number(d.calories), 0) / summaries.length
+        )
       : 0
 
     const prompt = `Here is my food log from the past 7 days:

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { getEntriesByDate, insertEntry, deleteEntry } from '@/database/db'
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
-const USER_ID = 1
 
 const PostSchema = z.object({
   food_name:   z.string().min(1).max(200),
@@ -17,16 +18,27 @@ const PostSchema = z.object({
   image_data:  z.string().max(11_000_000).optional(),
 })
 
+async function getUserId(): Promise<number | null> {
+  const session = await getServerSession(authOptions)
+  const id = Number((session?.user as any)?.id)
+  return id > 0 ? id : null
+}
+
 export async function GET(req: NextRequest) {
+  const userId = await getUserId()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const dateParam = req.nextUrl.searchParams.get('date') ?? new Date().toISOString().split('T')[0]
   const date = ISO_DATE.test(dateParam) ? dateParam : new Date().toISOString().split('T')[0]
-  const entries = await getEntriesByDate(USER_ID, date)
-  return NextResponse.json(entries)
+  return NextResponse.json(await getEntriesByDate(userId, date))
 }
 
 export async function POST(req: NextRequest) {
   if (!req.headers.get('content-type')?.includes('application/json'))
     return NextResponse.json({ error: 'Unsupported Media Type' }, { status: 415 })
+
+  const userId = await getUserId()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   let body: unknown
   try { body = await req.json() } catch {
@@ -40,7 +52,7 @@ export async function POST(req: NextRequest) {
   try {
     const { food_name, description, calories, protein, carbs, fat, fiber, timestamp, image_data } = parsed.data
     const id = await insertEntry({
-      user_id: USER_ID,
+      user_id: userId,
       timestamp: timestamp ?? new Date().toISOString(),
       food_name, description, calories, protein, carbs, fat, fiber, image_data,
     })
@@ -52,11 +64,14 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const userId = await getUserId()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const idParam = req.nextUrl.searchParams.get('id')
   const id = Number(idParam)
   if (!idParam || !Number.isInteger(id) || id <= 0)
     return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
 
-  await deleteEntry(id, USER_ID)
+  await deleteEntry(id, userId)
   return NextResponse.json({ success: true })
 }

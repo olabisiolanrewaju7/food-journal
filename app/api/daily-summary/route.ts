@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { getDailySummaries } from '@/database/db'
 
-const USER_ID = 1
-
 export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  const userId = Number((session?.user as any)?.id)
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const days = Math.min(Math.max(Number(req.nextUrl.searchParams.get('days')) || 7, 1), 365)
-  const summaries = await getDailySummaries(USER_ID, days)
-  return NextResponse.json(summaries)
+  return NextResponse.json(await getDailySummaries(userId, days))
 }

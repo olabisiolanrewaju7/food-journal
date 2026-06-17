@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { anthropic } from '@/lib/anthropic'
 import { rateLimit } from '@/lib/rateLimit'
 
@@ -32,6 +34,9 @@ export async function POST(req: NextRequest) {
   if (!req.headers.get('content-type')?.includes('application/json'))
     return NextResponse.json({ error: 'Unsupported Media Type' }, { status: 415 })
 
+  const session = await getServerSession(authOptions)
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const ip = req.headers.get('x-forwarded-for') ?? 'local'
   if (!rateLimit(`analyze:${ip}`, 20, 60_000))
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -62,10 +67,7 @@ export async function POST(req: NextRequest) {
         {
           role: 'user',
           content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: mimeType, data: imageBase64 },
-            },
+            { type: 'image', source: { type: 'base64', media_type: mimeType, data: imageBase64 } },
             {
               type: 'text',
               text: `Analyze the food in this image and return a JSON object with exactly these fields:
@@ -78,7 +80,7 @@ export async function POST(req: NextRequest) {
   "fat": <number in grams>,
   "fiber": <number in grams>
 }
-If multiple foods are visible, sum all values and list all items in food_name. Be specific about estimated portion sizes.`,
+If multiple foods are visible, sum all values and list all items in food_name.`,
             },
           ],
         },
