@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
   const goal = parsed.data.goal ?? ''
 
   try {
-    const summaries = getDailySummaries(USER_ID, 7)
-    const recentEntries = getRecentEntries(USER_ID, 7)
+    const summaries = await getDailySummaries(USER_ID, 7)
+    const recentEntries = await getRecentEntries(USER_ID, 7)
 
     if (recentEntries.length === 0) {
       return NextResponse.json({
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     const avgCalories = summaries.length > 0
-      ? Math.round(summaries.reduce((s: number, d: any) => s + d.calories, 0) / summaries.length)
+      ? Math.round(summaries.reduce((s: number, d: any) => s + Number(d.calories), 0) / summaries.length)
       : 0
 
     const prompt = `Here is my food log from the past 7 days:

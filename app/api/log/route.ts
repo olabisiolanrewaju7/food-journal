@@ -20,7 +20,8 @@ const PostSchema = z.object({
 export async function GET(req: NextRequest) {
   const dateParam = req.nextUrl.searchParams.get('date') ?? new Date().toISOString().split('T')[0]
   const date = ISO_DATE.test(dateParam) ? dateParam : new Date().toISOString().split('T')[0]
-  return NextResponse.json(getEntriesByDate(USER_ID, date))
+  const entries = await getEntriesByDate(USER_ID, date)
+  return NextResponse.json(entries)
 }
 
 export async function POST(req: NextRequest) {
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { food_name, description, calories, protein, carbs, fat, fiber, timestamp, image_data } = parsed.data
-    const id = insertEntry({
+    const id = await insertEntry({
       user_id: USER_ID,
       timestamp: timestamp ?? new Date().toISOString(),
       food_name, description, calories, protein, carbs, fat, fiber, image_data,
@@ -56,6 +57,6 @@ export async function DELETE(req: NextRequest) {
   if (!idParam || !Number.isInteger(id) || id <= 0)
     return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
 
-  deleteEntry(id, USER_ID)
+  await deleteEntry(id, USER_ID)
   return NextResponse.json({ success: true })
 }
