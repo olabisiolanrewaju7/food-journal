@@ -271,13 +271,13 @@ export default function CravingsPage() {
             </div>
             <p className="font-bold" style={{ color: '#004d1a' }}>What are you craving?</p>
             <p className="text-sm mt-1 max-w-xs" style={{ color: '#9c8e7e' }}>
-              Tap the mic or type below — I&apos;ll suggest options that fit your goals.
+              Tap the mic or type — I&apos;ll find something that hits the spot without throwing you off.
             </p>
             <div className="mt-5 space-y-2 w-full max-w-xs">
               {[
-                'Something sweet but healthy 🍓',
-                'A filling snack under 200 cal',
-                'High protein African dish',
+                'I want something sweet but healthy 🍓',
+                'High protein snack, under 200 calories',
+                'Something filling — African vibes 🌍',
               ].map(hint => (
                 <button key={hint} onClick={() => send(hint)}
                   className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium"
