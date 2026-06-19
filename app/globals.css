@@ -13,6 +13,7 @@
 body {
   color: var(--foreground);
   background: #c8e6c9;
+  overscroll-behavior-y: auto;
 }
 
 .safe-area-pb {

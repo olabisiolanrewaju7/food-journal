@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Salad, LogOut } from 'lucide-react'
+import { Salad, LogOut, RefreshCw } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import CameraCapture from '@/components/CameraCapture'
 import FoodAnalysisResult from '@/components/FoodAnalysisResult'
@@ -12,23 +12,28 @@ import { FoodAnalysis, FoodEntry } from '@/types'
 export default function HomePage() {
   const { data: session } = useSession()
   const [entries, setEntries] = useState<FoodEntry[]>([])
+  const [refreshing, setRefreshing] = useState(false)
   const [pendingAnalysis, setPendingAnalysis] = useState<{ analysis: FoodAnalysis; imageDataUrl: string } | null>(null)
   const today = new Date().toISOString().split('T')[0]
 
-  const fetchEntries = useCallback(async () => {
+  const fetchEntries = useCallback(async (showSpinner = false) => {
     const cacheKey = `fj-entries-${today}`
-    // Show cached data instantly
-    try {
-      const cached = localStorage.getItem(cacheKey)
-      if (cached) setEntries(JSON.parse(cached))
-    } catch { /* ignore */ }
-    // Fetch fresh data in background
+    if (showSpinner) {
+      setRefreshing(true)
+    } else {
+      // Show cached data instantly on silent load
+      try {
+        const cached = localStorage.getItem(cacheKey)
+        if (cached) setEntries(JSON.parse(cached))
+      } catch { /* ignore */ }
+    }
     const res = await fetch(`/api/log?date=${today}`)
     if (res.ok) {
       const data = await res.json()
       setEntries(data)
       try { localStorage.setItem(cacheKey, JSON.stringify(data)) } catch { /* ignore */ }
     }
+    setRefreshing(false)
   }, [today])
 
   useEffect(() => { fetchEntries() }, [fetchEntries])
@@ -55,9 +60,19 @@ export default function HomePage() {
           </div>
           {session?.user && (
             <div className="flex flex-col items-end gap-2">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-                style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}>
-                {session.user.name?.[0]?.toUpperCase() ?? '?'}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => fetchEntries(true)}
+                  disabled={refreshing}
+                  className="w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-50"
+                  style={{ background: 'rgba(255,255,255,0.15)' }}
+                  aria-label="Refresh">
+                  <RefreshCw className={`w-4 h-4 text-white ${refreshing ? 'animate-spin' : ''}`} />
+                </button>
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                  style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}>
+                  {session.user.name?.[0]?.toUpperCase() ?? '?'}
+                </div>
               </div>
               <button onClick={() => signOut({ callbackUrl: '/login' })}
                 className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest"
