@@ -20,9 +20,9 @@ export default function CoachPage() {
         body: JSON.stringify({ goal }),
       })
       const data = await res.json()
-      if (data.error) throw new Error()
+      if (data.error) throw new Error(data.error)
       setAdvice(data.advice)
-    } catch { setError('Failed to get advice. Please try again.') }
+    } catch (e) { setError(e instanceof Error ? e.message : 'Failed to get advice. Please try again.') }
     finally { setLoading(false) }
   }
 
