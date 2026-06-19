@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { getEntriesByDate, insertEntry, deleteEntry } from '@/database/db'
+import { getEntriesByDate, insertEntry, updateEntry, deleteEntry } from '@/database/db'
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -61,6 +61,38 @@ export async function POST(req: NextRequest) {
     console.error('log POST error:', err instanceof Error ? err.message : 'unknown')
     return NextResponse.json({ error: 'Failed to save entry' }, { status: 500 })
   }
+}
+
+const PatchSchema = z.object({
+  id:          z.number().int().positive(),
+  food_name:   z.string().min(1).max(200),
+  description: z.string().max(500).default(''),
+  calories:    z.number().min(0).max(10_000),
+  protein:     z.number().min(0).max(1_000),
+  carbs:       z.number().min(0).max(2_000),
+  fat:         z.number().min(0).max(1_000),
+  fiber:       z.number().min(0).max(500),
+})
+
+export async function PATCH(req: NextRequest) {
+  if (!req.headers.get('content-type')?.includes('application/json'))
+    return NextResponse.json({ error: 'Unsupported Media Type' }, { status: 415 })
+
+  const userId = await getUserId()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  let body: unknown
+  try { body = await req.json() } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const parsed = PatchSchema.safeParse(body)
+  if (!parsed.success)
+    return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 })
+
+  const { id, ...fields } = parsed.data
+  await updateEntry(id, userId, fields)
+  return NextResponse.json({ success: true })
 }
 
 export async function DELETE(req: NextRequest) {

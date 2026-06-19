@@ -83,7 +83,11 @@ export default function HomePage() {
           <CameraCapture onAnalysis={(a, img) => setPendingAnalysis({ analysis: a, imageDataUrl: img })} />
         )}
 
-        <FoodLogList entries={entries} onDelete={id => setEntries(p => p.filter(e => e.id !== id))} />
+        <FoodLogList
+          entries={entries}
+          onDelete={id => setEntries(p => p.filter(e => e.id !== id))}
+          onUpdate={updated => setEntries(p => p.map(e => e.id === updated.id ? updated : e))}
+        />
       </div>
     </div>
   )

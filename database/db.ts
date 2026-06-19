@@ -72,6 +72,19 @@ export async function getEntriesByDate(userId: number, date: string) {
   return result.rows
 }
 
+export async function updateEntry(
+  id: number,
+  userId: number,
+  fields: { food_name: string; description: string; calories: number; protein: number; carbs: number; fat: number; fiber: number }
+) {
+  const db = getDb()
+  await db.execute({
+    sql: `UPDATE food_entries SET food_name=?, description=?, calories=?, protein=?, carbs=?, fat=?, fiber=?
+          WHERE id=? AND user_id=?`,
+    args: [fields.food_name, fields.description, fields.calories, fields.protein, fields.carbs, fields.fat, fields.fiber, id, userId],
+  })
+}
+
 export async function deleteEntry(id: number, userId: number) {
   const db = getDb()
   await db.execute({
