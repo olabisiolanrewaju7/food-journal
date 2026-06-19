@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Home, BarChart2, Lightbulb, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useNav } from '@/lib/NavContext'
 
 const links = [
   { href: '/', label: 'Home', icon: Home },
@@ -15,13 +16,14 @@ const links = [
 
 export default function BottomNav() {
   const pathname = usePathname()
+  const { hideNav } = useNav()
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
   if (!mounted) return null
 
   const hideOn = ['/login', '/register', '/splash']
   if (hideOn.includes(pathname)) return null
-  if (document.body.hasAttribute('data-analysing')) return null
+  if (hideNav) return null
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white safe-area-pb"

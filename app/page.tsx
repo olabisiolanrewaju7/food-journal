@@ -8,9 +8,11 @@ import FoodAnalysisResult from '@/components/FoodAnalysisResult'
 import FoodLogList from '@/components/FoodLogList'
 import MacroProgressBars from '@/components/MacroProgressBars'
 import { FoodAnalysis, FoodEntry } from '@/types'
+import { useNav } from '@/lib/NavContext'
 
 export default function HomePage() {
   const { data: session } = useSession()
+  const { setHideNav } = useNav()
   const [entries, setEntries] = useState<FoodEntry[]>([])
   const [refreshing, setRefreshing] = useState(false)
   const [pendingAnalysis, setPendingAnalysis] = useState<{ analysis: FoodAnalysis; imageDataUrl: string } | null>(null)
@@ -40,13 +42,9 @@ export default function HomePage() {
 
   // Hide bottom nav while reviewing an analysis so the Log button is always reachable
   useEffect(() => {
-    if (pendingAnalysis) {
-      document.body.setAttribute('data-analysing', '1')
-    } else {
-      document.body.removeAttribute('data-analysing')
-    }
-    return () => document.body.removeAttribute('data-analysing')
-  }, [pendingAnalysis])
+    setHideNav(!!pendingAnalysis)
+    return () => setHideNav(false)
+  }, [pendingAnalysis, setHideNav])
 
   return (
     <div className="min-h-screen">
