@@ -55,7 +55,7 @@ Daily summaries:
 ${JSON.stringify(summaries, null, 2)}
 
 Recent meals (last 7 days):
-${JSON.stringify(recentEntries.slice(0, 30), null, 2)}
+${JSON.stringify(recentEntries.slice(0, 30).map(({ image_data, ...rest }) => rest), null, 2)}
 
 Average daily calories: ${avgCalories}
 My goal: [${goal || 'general health and balanced nutrition'}]
