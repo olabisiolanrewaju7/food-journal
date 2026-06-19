@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+export const maxDuration = 60
 import { z } from 'zod'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -68,11 +70,11 @@ Please provide personalized dietary advice in exactly 3 sections with these head
 ## This Week's Focus
 (1 concrete habit to implement, be very specific)
 
-Keep the total response under 400 words. Reference my actual food choices and numbers.`
+Keep the total response under 250 words. Be specific but concise. Reference my actual food choices and numbers.`
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 800,
+      max_tokens: 500,
       messages: [{ role: 'user', content: prompt }],
     })
 
