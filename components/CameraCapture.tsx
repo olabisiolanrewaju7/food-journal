@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import { Camera, ImagePlus, X, Loader2, Zap } from 'lucide-react'
 import { FoodAnalysis } from '@/types'
 
-export default function CameraCapture({ onAnalysis }: { onAnalysis: (a: FoodAnalysis, img: string) => void }) {
+export default function CameraCapture({ onAnalysis, onPreviewChange }: { onAnalysis: (a: FoodAnalysis, img: string) => void; onPreviewChange?: (hasPreview: boolean) => void }) {
   const [preview, setPreview] = useState<string | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -14,7 +14,7 @@ export default function CameraCapture({ onAnalysis }: { onAnalysis: (a: FoodAnal
   function handleFile(file: File) {
     setError(null)
     const reader = new FileReader()
-    reader.onload = e => setPreview(e.target?.result as string)
+    reader.onload = e => { setPreview(e.target?.result as string); onPreviewChange?.(true) }
     reader.readAsDataURL(file)
   }
 
@@ -31,13 +31,13 @@ export default function CameraCapture({ onAnalysis }: { onAnalysis: (a: FoodAnal
       })
       if (!res.ok) throw new Error()
       onAnalysis(await res.json(), preview)
-      setPreview(null)
+      setPreview(null); onPreviewChange?.(false)
     } catch { setError('Could not analyze image. Please try again.') }
     finally { setAnalyzing(false) }
   }
 
   function reset() {
-    setPreview(null); setError(null)
+    setPreview(null); setError(null); onPreviewChange?.(false)
     if (cameraRef.current) cameraRef.current.value = ''
     if (galleryRef.current) galleryRef.current.value = ''
   }

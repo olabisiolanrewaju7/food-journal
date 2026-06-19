@@ -16,6 +16,7 @@ export default function HomePage() {
   const [entries, setEntries] = useState<FoodEntry[]>([])
   const [refreshing, setRefreshing] = useState(false)
   const [pendingAnalysis, setPendingAnalysis] = useState<{ analysis: FoodAnalysis; imageDataUrl: string } | null>(null)
+  const [cameraHasPreview, setCameraHasPreview] = useState(false)
   const today = new Date().toISOString().split('T')[0]
 
   const fetchEntries = useCallback(async (showSpinner = false) => {
@@ -42,9 +43,9 @@ export default function HomePage() {
 
   // Hide bottom nav while reviewing an analysis so the Log button is always reachable
   useEffect(() => {
-    setHideNav(!!pendingAnalysis)
+    setHideNav(!!pendingAnalysis || cameraHasPreview)
     return () => setHideNav(false)
-  }, [pendingAnalysis, setHideNav])
+  }, [pendingAnalysis, cameraHasPreview, setHideNav])
 
   return (
     <div className="min-h-screen">
@@ -103,7 +104,7 @@ export default function HomePage() {
             onDiscard={() => setPendingAnalysis(null)}
           />
         ) : (
-          <CameraCapture onAnalysis={(a, img) => setPendingAnalysis({ analysis: a, imageDataUrl: img })} />
+          <CameraCapture onAnalysis={(a, img) => setPendingAnalysis({ analysis: a, imageDataUrl: img })} onPreviewChange={setCameraHasPreview} />
         )}
 
         <FoodLogList
