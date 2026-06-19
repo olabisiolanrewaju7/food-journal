@@ -150,12 +150,15 @@ export default function FoodLogList({ entries, onDelete, onUpdate }: Props) {
             <div className="flex flex-col gap-1 flex-shrink-0 self-start mt-1">
               <button onClick={() => editingId === entry.id ? cancelEdit() : startEdit(entry)}
                 className="p-2 rounded-lg transition-colors"
-                style={{ color: editingId === entry.id ? '#007a2e' : '#b5a99a' }}>
+                style={{
+                  background: editingId === entry.id ? '#f0fdf4' : '#f5f0e8',
+                  color: editingId === entry.id ? '#007a2e' : '#5a5246',
+                }}>
                 <Pencil className="w-4 h-4" />
               </button>
               <button onClick={() => handleDelete(entry.id)}
                 className="p-2 rounded-lg transition-colors"
-                style={{ color: '#d8cfc4' }}>
+                style={{ background: '#fff1f2', color: '#e11d48' }}>
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
