@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Trash2, Clock, Flame, UtensilsCrossed, Pencil, Check, X } from 'lucide-react'
+import { Trash2, Clock, Flame, UtensilsCrossed, Pencil, Check, X, Sparkles, Loader2 } from 'lucide-react'
 import { FoodEntry } from '@/types'
 import { formatTime } from '@/lib/utils'
 
@@ -37,6 +37,8 @@ export default function FoodLogList({ entries, onDelete, onUpdate }: Props) {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editState, setEditState] = useState<EditState | null>(null)
   const [saving, setSaving] = useState(false)
+  const [analysing, setAnalysing] = useState(false)
+  const [analyseError, setAnalyseError] = useState('')
 
   async function handleDelete(id: number) {
     await fetch(`/api/log?id=${id}`, { method: 'DELETE' })
@@ -46,11 +48,42 @@ export default function FoodLogList({ entries, onDelete, onUpdate }: Props) {
   function startEdit(entry: FoodEntry) {
     setEditingId(entry.id)
     setEditState(toEditState(entry))
+    setAnalyseError('')
   }
 
   function cancelEdit() {
     setEditingId(null)
     setEditState(null)
+    setAnalyseError('')
+  }
+
+  async function reanalyse() {
+    if (!editState?.food_name.trim()) return
+    setAnalysing(true)
+    setAnalyseError('')
+    try {
+      const res = await fetch('/api/analyze-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ food_name: editState.food_name.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Failed')
+      setEditState(s => s ? {
+        ...s,
+        food_name: data.food_name ?? s.food_name,
+        description: data.description ?? s.description,
+        calories: String(Math.round(data.calories ?? 0)),
+        protein: String(Math.round(data.protein ?? 0)),
+        carbs: String(Math.round(data.carbs ?? 0)),
+        fat: String(Math.round(data.fat ?? 0)),
+        fiber: String(Math.round(data.fiber ?? 0)),
+      } : s)
+    } catch (err) {
+      setAnalyseError(err instanceof Error ? err.message : 'Failed to analyse')
+    } finally {
+      setAnalysing(false)
+    }
   }
 
   async function saveEdit(entry: FoodEntry) {
@@ -167,7 +200,37 @@ export default function FoodLogList({ entries, onDelete, onUpdate }: Props) {
           {/* Inline edit panel */}
           {editingId === entry.id && editState && (
             <div className="px-3 pb-4 pt-1 space-y-3 border-t" style={{ borderColor: '#f0ebe3' }}>
-              {field('Food name', 'food_name')}
+              {/* Food name + Re-analyse */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#9c8e7e' }}>
+                  Food name
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editState.food_name}
+                    onChange={e => setEditState(s => s ? { ...s, food_name: e.target.value } : s)}
+                    className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
+                    style={{ background: '#f5f0e8', color: '#1a1a1a' }}
+                    placeholder="e.g. cooked oats"
+                  />
+                  <button
+                    onClick={reanalyse}
+                    disabled={analysing || !editState.food_name.trim()}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50 shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #004d1a, #00c853)' }}
+                  >
+                    {analysing
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <Sparkles className="w-4 h-4" />}
+                    {analysing ? 'Analysing…' : 'Re-analyse'}
+                  </button>
+                </div>
+                {analyseError && (
+                  <p className="text-xs mt-1" style={{ color: '#e11d48' }}>{analyseError}</p>
+                )}
+              </div>
+
               {field('Description', 'description')}
               <div className="grid grid-cols-2 gap-3">
                 {field('Calories', 'calories', 'kcal')}
