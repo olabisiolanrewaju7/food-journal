@@ -31,3 +31,6 @@ body {
     background: linear-gradient(135deg, #004d1a 0%, #007a2e 60%, #00c853 100%);
   }
 }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
