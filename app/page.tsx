@@ -38,6 +38,16 @@ export default function HomePage() {
 
   useEffect(() => { fetchEntries() }, [fetchEntries])
 
+  // Hide bottom nav while reviewing an analysis so the Log button is always reachable
+  useEffect(() => {
+    if (pendingAnalysis) {
+      document.body.setAttribute('data-analysing', '1')
+    } else {
+      document.body.removeAttribute('data-analysing')
+    }
+    return () => document.body.removeAttribute('data-analysing')
+  }, [pendingAnalysis])
+
   return (
     <div className="min-h-screen">
       {/* Header */}

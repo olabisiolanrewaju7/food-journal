@@ -128,8 +128,10 @@ export default function FoodAnalysisResult({ analysis, imageDataUrl, onConfirm, 
           <img src={imageDataUrl} alt={current.food_name} className="w-full h-48 object-cover" />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26,61,43,0.75), transparent 50%)' }} />
           <div className="absolute bottom-3 left-4 right-4">
-            <p className="text-white font-bold text-lg leading-tight">{current.food_name}</p>
-            {current.description && <p className="text-white/70 text-xs mt-0.5">{current.description}</p>}
+            <p className="text-white font-bold text-lg leading-tight line-clamp-2">{current.food_name}</p>
+            {current.description && (
+              <p className="text-white/70 text-xs mt-0.5 line-clamp-1">{current.description}</p>
+            )}
           </div>
         </div>
       )}

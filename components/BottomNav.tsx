@@ -21,6 +21,7 @@ export default function BottomNav() {
 
   const hideOn = ['/login', '/register', '/splash']
   if (hideOn.includes(pathname)) return null
+  if (document.body.hasAttribute('data-analysing')) return null
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white safe-area-pb"
