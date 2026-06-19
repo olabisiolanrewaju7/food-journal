@@ -81,7 +81,8 @@ Keep the total response under 250 words. Be specific but concise. Reference my a
     const advice = response.content[0].type === 'text' ? response.content[0].text : ''
     return NextResponse.json({ advice })
   } catch (err) {
-    console.error('advice error:', err instanceof Error ? err.message : 'unknown')
-    return NextResponse.json({ error: 'Failed to generate advice' }, { status: 500 })
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('advice error:', msg)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
