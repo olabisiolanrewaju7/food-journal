@@ -1,18 +1,49 @@
 'use client'
 
-import { useState } from 'react'
-import { Lightbulb, Loader2, Sparkles } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Lightbulb, Loader2, Sparkles, RefreshCw } from 'lucide-react'
 
 const QUICK_GOALS = ['Lose weight', 'Build muscle', 'Eat healthier', 'More energy', 'Better sleep']
+
+function cacheKey(goal: string) {
+  return `fj-advice-${goal.trim().toLowerCase().replace(/\s+/g, '-') || 'general'}`
+}
 
 export default function CoachPage() {
   const [goal, setGoal] = useState('')
   const [advice, setAdvice] = useState('')
+  const [cachedAt, setCachedAt] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  async function getAdvice() {
-    setLoading(true); setAdvice(''); setError('')
+  // Load cached advice when goal changes
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(cacheKey(goal))
+      if (raw) {
+        const { advice: a, ts } = JSON.parse(raw)
+        setAdvice(a); setCachedAt(ts)
+      } else {
+        setAdvice(''); setCachedAt(null)
+      }
+    } catch { setAdvice(''); setCachedAt(null) }
+  }, [goal])
+
+  async function getAdvice(force = false) {
+    if (!force) {
+      // If cached within 6 hours, show it without fetching
+      const raw = localStorage.getItem(cacheKey(goal))
+      if (raw) {
+        try {
+          const { advice: a, ts } = JSON.parse(raw)
+          if (Date.now() - ts < 6 * 60 * 60 * 1000) {
+            setAdvice(a); setCachedAt(ts); return
+          }
+        } catch { /* stale, refetch */ }
+      }
+    }
+
+    setLoading(true); setError('')
     try {
       const res = await fetch('/api/advice', {
         method: 'POST',
@@ -21,7 +52,9 @@ export default function CoachPage() {
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      setAdvice(data.advice)
+      const ts = Date.now()
+      setAdvice(data.advice); setCachedAt(ts)
+      try { localStorage.setItem(cacheKey(goal), JSON.stringify({ advice: data.advice, ts })) } catch { /* ignore */ }
     } catch (e) { setError(e instanceof Error ? e.message : 'Failed to get advice. Please try again.') }
     finally { setLoading(false) }
   }
@@ -39,6 +72,15 @@ export default function CoachPage() {
       return <p key={i} className="text-sm leading-relaxed" style={{ color: '#5a5246' }}>{line}</p>
     })
   }
+
+  const ageLabel = cachedAt
+    ? (() => {
+        const mins = Math.round((Date.now() - cachedAt) / 60_000)
+        if (mins < 1) return 'just now'
+        if (mins < 60) return `${mins}m ago`
+        return `${Math.round(mins / 60)}h ago`
+      })()
+    : null
 
   return (
     <div className="min-h-screen">
@@ -78,7 +120,7 @@ export default function CoachPage() {
               ))}
             </div>
           </div>
-          <button onClick={getAdvice} disabled={loading}
+          <button onClick={() => getAdvice(false)} disabled={loading}
             className="w-full flex items-center justify-center gap-2 py-4 font-bold text-white disabled:opacity-60 transition-opacity"
             style={{ background: 'linear-gradient(135deg, #004d1a, #00c853)' }}>
             {loading
@@ -95,9 +137,19 @@ export default function CoachPage() {
 
         {advice ? (
           <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 2px 12px rgba(26,61,43,0.08)' }}>
-            <div className="px-4 py-3 flex items-center gap-2" style={{ background: '#f0faf4', borderBottom: '1px solid #d8f3dc' }}>
-              <Sparkles className="w-4 h-4" style={{ color: '#00c853' }} />
-              <span className="font-bold text-sm" style={{ color: '#004d1a' }}>Your Personalized Analysis</span>
+            <div className="px-4 py-3 flex items-center justify-between" style={{ background: '#f0faf4', borderBottom: '1px solid #d8f3dc' }}>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" style={{ color: '#00c853' }} />
+                <span className="font-bold text-sm" style={{ color: '#004d1a' }}>Your Personalized Analysis</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {ageLabel && <span className="text-xs" style={{ color: '#9c8e7e' }}>{ageLabel}</span>}
+                <button onClick={() => getAdvice(true)} disabled={loading}
+                  className="p-1.5 rounded-lg disabled:opacity-40"
+                  style={{ background: '#e8f5e9' }}>
+                  <RefreshCw className="w-3.5 h-3.5" style={{ color: '#007a2e' }} />
+                </button>
+              </div>
             </div>
             <div className="p-4">{renderAdvice(advice)}</div>
           </div>
