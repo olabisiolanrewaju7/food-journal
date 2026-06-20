@@ -90,6 +90,7 @@ export default function CravingsPage() {
   const [prefs, setPrefs] = useState<Preferences>({ cuisines: [], pastChoices: [], dietaryNotes: [] })
   const [listening, setListening] = useState(false)
   const [speechSupported, setSpeechSupported] = useState(false)
+  const [isIosNonSafari, setIsIosNonSafari] = useState(false)
   const [loggedItem, setLoggedItem] = useState<string | null>(null)
 
   // Make it state
@@ -111,7 +112,12 @@ export default function CravingsPage() {
 
   useEffect(() => {
     setPrefs(loadPrefs())
-    setSpeechSupported('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
+    const ua = navigator.userAgent
+    const isIos = /iphone|ipad|ipod/i.test(ua)
+    const isSafari = /safari/i.test(ua) && !/chrome|crios|fxios/i.test(ua)
+    const iosNonSafari = isIos && !isSafari
+    setIsIosNonSafari(iosNonSafari)
+    setSpeechSupported(!iosNonSafari && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window))
   }, [])
 
   useEffect(() => {
@@ -611,6 +617,14 @@ export default function CravingsPage() {
 
       {/* Input bar */}
       <div className="flex-shrink-0 px-4 pb-28 pt-3 border-t" style={{ borderColor: '#e8e0d4', background: '#f5f5f0' }}>
+        {isIosNonSafari && (
+          <div className="flex items-start gap-2 mb-2 px-3 py-2.5 rounded-xl" style={{ background: '#fff8f0', border: '1px solid #ffe0b2' }}>
+            <Mic className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#e65100' }} />
+            <p className="text-xs leading-relaxed" style={{ color: '#e65100' }}>
+              Voice input works in <strong>Safari</strong> on iPhone. You can still type your craving below.
+            </p>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           {speechSupported && (
             <button onClick={toggleVoice}
