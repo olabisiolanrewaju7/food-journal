@@ -184,6 +184,7 @@ export default function CravingsPage() {
   }
 
   function toggleVoice() {
+    if (isIosNonSafari) { setListening(prev => !prev); return }
     if (listening) { recognitionRef.current?.stop(); setListening(false); return }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
@@ -617,16 +618,16 @@ export default function CravingsPage() {
 
       {/* Input bar */}
       <div className="flex-shrink-0 px-4 pb-28 pt-3 border-t" style={{ borderColor: '#e8e0d4', background: '#f5f5f0' }}>
-        {isIosNonSafari && (
+        {isIosNonSafari && listening && (
           <div className="flex items-start gap-2 mb-2 px-3 py-2.5 rounded-xl" style={{ background: '#fff8f0', border: '1px solid #ffe0b2' }}>
             <Mic className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#e65100' }} />
             <p className="text-xs leading-relaxed" style={{ color: '#e65100' }}>
-              Voice input works in <strong>Safari</strong> on iPhone. You can still type your craving below.
+              Voice input only works in <strong>Safari</strong> on iPhone. You can still type your craving below.
             </p>
           </div>
         )}
         <div className="flex items-center gap-2">
-          {speechSupported && (
+          {(speechSupported || isIosNonSafari) && (
             <button onClick={toggleVoice}
               className="flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center transition-all"
               style={listening ? { background: '#e11d48', boxShadow: '0 0 0 4px rgba(225,29,72,0.2)' } : { background: 'white', boxShadow: '0 2px 8px rgba(26,61,43,0.1)' }}>
