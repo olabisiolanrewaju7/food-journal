@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Settings, Target, User, CreditCard, ChevronRight } from 'lucide-react'
+import { Settings, Target, User, CreditCard, ChevronRight, Activity } from 'lucide-react'
 
 const MENU = [
   {
@@ -19,6 +19,14 @@ const MENU = [
     iconColor: '#007a2e',
     title: 'My Profile',
     subtitle: 'Name, age, height, weight & gender',
+  },
+  {
+    href: '/settings/body-stats',
+    icon: Activity,
+    iconBg: '#e0f2fe',
+    iconColor: '#0284c7',
+    title: 'Body Stats & Progress',
+    subtitle: 'Track weight, body fat & goal timeline',
   },
   {
     href: '/settings/payment',

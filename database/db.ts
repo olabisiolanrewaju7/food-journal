@@ -113,6 +113,41 @@ export async function getDailySummaries(userId: number, days: number) {
   return result.rows
 }
 
+// ── Body stats ───────────────────────────────────────────────────────────────
+
+export async function insertBodyStat(entry: {
+  user_id: number
+  recorded_at: string
+  weight_kg: number
+  body_fat_pct: number | null
+  notes: string | null
+}) {
+  const db = getDb()
+  const result = await db.execute({
+    sql: `INSERT INTO body_stats (user_id, recorded_at, weight_kg, body_fat_pct, notes)
+          VALUES (?, ?, ?, ?, ?)`,
+    args: [entry.user_id, entry.recorded_at, entry.weight_kg, entry.body_fat_pct ?? null, entry.notes ?? null],
+  })
+  return Number(result.lastInsertRowid)
+}
+
+export async function getBodyStats(userId: number, limit = 90) {
+  const db = getDb()
+  const result = await db.execute({
+    sql: `SELECT * FROM body_stats WHERE user_id = ? ORDER BY recorded_at DESC LIMIT ?`,
+    args: [userId, limit],
+  })
+  return result.rows
+}
+
+export async function deleteBodyStat(id: number, userId: number) {
+  const db = getDb()
+  await db.execute({
+    sql: `DELETE FROM body_stats WHERE id = ? AND user_id = ?`,
+    args: [id, userId],
+  })
+}
+
 export async function getRecentEntries(userId: number, days: number) {
   const db = getDb()
   const result = await db.execute({
