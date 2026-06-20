@@ -314,7 +314,7 @@ export default function CravingsPage() {
                   {recipe.ingredients.map((ing, i) => (
                     <button key={i} onClick={() => setCheckedIngredients(prev => {
                       const next = new Set(prev)
-                      next.has(i) ? next.delete(i) : next.add(i)
+                      if (next.has(i)) { next.delete(i) } else { next.add(i) }
                       return next
                     })} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left"
                       style={{ background: 'white' }}>
