@@ -113,6 +113,37 @@ export async function getDailySummaries(userId: number, days: number) {
   return result.rows
 }
 
+// ── Password reset tokens ─────────────────────────────────────────────────────
+
+export async function createResetToken(userId: number, token: string, expiresAt: string) {
+  const db = getDb()
+  // Invalidate any existing tokens for this user
+  await db.execute({ sql: `DELETE FROM password_reset_tokens WHERE user_id = ?`, args: [userId] })
+  await db.execute({
+    sql: `INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)`,
+    args: [userId, token, expiresAt],
+  })
+}
+
+export async function getResetToken(token: string) {
+  const db = getDb()
+  const result = await db.execute({
+    sql: `SELECT * FROM password_reset_tokens WHERE token = ? AND used = 0 AND expires_at > datetime('now')`,
+    args: [token],
+  })
+  return result.rows[0] ?? null
+}
+
+export async function markTokenUsed(token: string) {
+  const db = getDb()
+  await db.execute({ sql: `UPDATE password_reset_tokens SET used = 1 WHERE token = ?`, args: [token] })
+}
+
+export async function updateUserPassword(userId: number, passwordHash: string) {
+  const db = getDb()
+  await db.execute({ sql: `UPDATE users SET password_hash = ? WHERE id = ?`, args: [passwordHash, userId] })
+}
+
 // ── Body stats ───────────────────────────────────────────────────────────────
 
 export async function insertBodyStat(entry: {

@@ -68,7 +68,10 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: '#9c8e7e' }}>Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-widest" style={{ color: '#9c8e7e' }}>Password</label>
+                <Link href="/forgot-password" className="text-xs font-semibold" style={{ color: '#007a2e' }}>Forgot password?</Link>
+              </div>
               <input
                 type="password" value={password} onChange={e => setPassword(e.target.value)} required
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none"
