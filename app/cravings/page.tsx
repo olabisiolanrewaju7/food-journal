@@ -191,15 +191,28 @@ export default function CravingsPage() {
     if (!SR) return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const recognition: any = new SR()
-    recognition.lang = 'en-US'; recognition.interimResults = false; recognition.maxAlternatives = 1
+    recognition.lang = 'en-US'
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.maxAlternatives = 1
+
+    let finalTranscript = ''
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onresult = (e: any) => {
-      const transcript = e.results[0][0].transcript
-      setInput((prev: string) => prev ? `${prev} ${transcript}` : transcript)
-      setListening(false)
+      let interim = ''
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          finalTranscript += e.results[i][0].transcript
+        } else {
+          interim += e.results[i][0].transcript
+        }
+      }
+      // Show interim results live in the input box
+      setInput(finalTranscript + interim)
     }
-    recognition.onerror = () => setListening(false)
-    recognition.onend = () => setListening(false)
+    recognition.onerror = () => { setListening(false); setInput(finalTranscript) }
+    recognition.onend = () => { setListening(false); setInput(finalTranscript || input) }
     recognitionRef.current = recognition
     recognition.start(); setListening(true)
   }
