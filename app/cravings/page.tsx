@@ -494,7 +494,7 @@ export default function CravingsPage() {
   const isEmpty = messages.length === 0
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col" style={{ height: '100dvh' }}>
       {/* Header */}
       <div className="relative px-5 pt-14 pb-6 overflow-hidden flex-shrink-0"
         style={{ background: 'linear-gradient(135deg, #004d1a 0%, #007a2e 60%, #00c853 100%)' }}>
@@ -644,7 +644,7 @@ export default function CravingsPage() {
       )}
 
       {/* Input bar */}
-      <div className="flex-shrink-0 px-4 pb-28 pt-3 border-t" style={{ borderColor: '#e8e0d4', background: '#f5f5f0' }}>
+      <div className="flex-shrink-0 px-4 pt-3 pb-24 border-t" style={{ borderColor: '#e8e0d4', background: '#f5f5f0' }}>
         {isIosNonSafari && listening && (
           <div className="flex items-start gap-2 mb-2 px-3 py-2.5 rounded-xl" style={{ background: '#fff8f0', border: '1px solid #ffe0b2' }}>
             <Mic className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#e65100' }} />
