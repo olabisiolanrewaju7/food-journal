@@ -210,9 +210,23 @@ export default function CravingsPage() {
       }
       // Show interim results live in the input box
       setInput(finalTranscript + interim)
+
+      // Auto-send if user says "send"
+      if (finalTranscript.trim().toLowerCase().endsWith('send')) {
+        const msgToSend = finalTranscript.replace(/send\s*$/i, '').trim()
+        recognition.stop()
+        setListening(false)
+        setInput('')
+        if (msgToSend) send(msgToSend)
+      }
     }
     recognition.onerror = () => { setListening(false); setInput(finalTranscript) }
-    recognition.onend = () => { setListening(false); setInput(finalTranscript || input) }
+    recognition.onend = () => {
+      setListening(false)
+      // Auto-send when user taps mic to stop
+      const msg = finalTranscript.trim()
+      if (msg) { setInput(''); send(msg) } else { setInput('') }
+    }
     recognitionRef.current = recognition
     recognition.start(); setListening(true)
   }
