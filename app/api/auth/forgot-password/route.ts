@@ -22,19 +22,23 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
 
   const { email } = parsed.data
+  console.log('[forgot-password] email received:', email)
 
-  // Always return success to prevent email enumeration
   const user = await getUserByEmail(email)
+  console.log('[forgot-password] user found:', !!user)
   if (!user) return NextResponse.json({ success: true })
 
   const token = randomBytes(32).toString('hex')
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString() // 1 hour
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
 
   await createResetToken(user.id, token, expiresAt)
+  console.log('[forgot-password] token created, sending email to:', email)
 
   const baseUrl = process.env.NEXTAUTH_URL
     ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
   const resetUrl = `${baseUrl}/reset-password?token=${token}`
+  console.log('[forgot-password] resetUrl:', resetUrl)
+  console.log('[forgot-password] RESEND_API_KEY set:', !!process.env.RESEND_API_KEY)
 
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error: sendError } = await resend.emails.send({
