@@ -32,14 +32,13 @@ export async function POST(req: NextRequest) {
 
   await createResetToken(user.id, token, expiresAt)
 
-  const baseUrl = process.env.NEXTAUTH_URL ?? process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'http://localhost:3000'
+  const baseUrl = process.env.NEXTAUTH_URL
+    ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
   const resetUrl = `${baseUrl}/reset-password?token=${token}`
 
   const resend = new Resend(process.env.RESEND_API_KEY)
-  await resend.emails.send({
-    from: 'FoodJournal <noreply@foodjournal.app>',
+  const { error: sendError } = await resend.emails.send({
+    from: 'FoodJournal <onboarding@resend.dev>',
     to: email,
     subject: 'Reset your FoodJournal password',
     html: `
@@ -63,6 +62,8 @@ export async function POST(req: NextRequest) {
       </div>
     `,
   })
+
+  if (sendError) console.error('[forgot-password] Resend error:', sendError)
 
   return NextResponse.json({ success: true })
 }
