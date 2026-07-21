@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error: sendError } = await resend.emails.send({
-    from: 'FoodJournal <onboarding@resend.dev>',
+    from: 'FoodJournal <noreply@foodsjournal.online>',
     to: email,
     subject: 'Reset your FoodJournal password',
     html: `

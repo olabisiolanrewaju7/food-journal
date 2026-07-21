@@ -54,10 +54,8 @@ On Vercel, set `NEXTAUTH_URL=https://food-journal-jet.vercel.app` explicitly in 
 - `/forgot-password` → POST `/api/auth/forgot-password` → generates 32-byte token, stores in `password_reset_tokens`, emails link via Resend (1-hour expiry)
 - `/reset-password?token=...` → POST `/api/auth/reset-password` → validates token, bcrypt-hashes new password, marks token used
 - Always returns `{ success: true }` on forgot-password even if email not found (prevents enumeration)
-- **Resend test mode**: without a verified domain, Resend only delivers to the Resend account owner's email (`olabisi.olanrewaju7@gmail.com`). To send to all users, verify a domain at resend.com/domains and update `from` in `app/api/auth/forgot-password/route.ts`
-- **`NEXTAUTH_URL` must be set to `https://food-journal-jet.vercel.app`** in Vercel (Production env) — without it, `VERCEL_URL` resolves to a per-deployment preview URL and reset links break
-- Reset email `from` is currently `onboarding@resend.dev` (Resend test sender) — change to `noreply@yourdomain.com` once a domain is verified
-- `app/api/auth/forgot-password/route.ts` has `console.log` debug statements at each step — useful for diagnosing delivery issues via Vercel Logs; remove before production
+- **Domain `foodsjournal.online` is verified in Resend** — reset emails send from `noreply@foodsjournal.online` and deliver to all users, not just the account owner
+- **`NEXTAUTH_URL` must be set to `https://food-journal-jet.vercel.app`** in Vercel (Production env) — without it, `VERCEL_URL` resolves to a per-deployment preview URL and reset links break. `next.config.mjs` previously force-overrode this with `VERCEL_URL` on every build regardless of the dashboard value — that override was removed; do not re-add it
 
 ### User Flow
 
