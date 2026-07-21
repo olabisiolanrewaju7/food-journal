@@ -152,6 +152,11 @@ export default function CoachPage() {
               </div>
             </div>
             <div className="p-4">{renderAdvice(advice)}</div>
+            <div className="px-4 pb-3">
+              <p className="text-xs" style={{ color: '#b5a99a' }}>
+                General nutrition guidance, not medical advice. Consult a healthcare professional for medical decisions.
+              </p>
+            </div>
           </div>
         ) : !loading && (
           <div className="bg-white rounded-2xl p-8 text-center" style={{ boxShadow: '0 2px 12px rgba(26,61,43,0.08)' }}>

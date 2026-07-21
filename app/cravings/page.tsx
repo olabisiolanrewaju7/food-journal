@@ -554,6 +554,9 @@ export default function CravingsPage() {
                 </button>
               ))}
             </div>
+            <p className="text-xs mt-5 max-w-xs" style={{ color: '#b5a99a' }}>
+              General nutrition guidance, not medical advice. Consult a healthcare professional for medical decisions.
+            </p>
           </div>
         )}
 

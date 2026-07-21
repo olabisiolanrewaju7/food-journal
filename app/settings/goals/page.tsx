@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Target, Flame, Dumbbell, Wheat, Droplets, Leaf, Check, ArrowLeft } from 'lucide-react'
+import { Target, Flame, Dumbbell, Wheat, Droplets, Leaf, Check, ArrowLeft, AlertTriangle } from 'lucide-react'
 
 const DEFAULT_GOALS = { calories: 2000, protein: 150, carbs: 250, fat: 65, fiber: 30 }
+const SAFE_CALORIE_FLOOR = 1200
 
 const GOAL_FIELDS = [
   { key: 'calories', label: 'Daily Calories', icon: Flame,    unit: 'kcal', iconBg: '#fff3e0', iconColor: '#f97316', min: 800,  max: 5000 },
@@ -18,6 +19,7 @@ export default function GoalsPage() {
   const router = useRouter()
   const [goals, setGoals] = useState(DEFAULT_GOALS)
   const [saved, setSaved] = useState(false)
+  const [showLowCalorieWarning, setShowLowCalorieWarning] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem('healthyyou-goals')
@@ -29,10 +31,23 @@ export default function GoalsPage() {
     setSaved(false)
   }
 
-  function save() {
+  function persistGoals() {
     localStorage.setItem('healthyyou-goals', JSON.stringify(goals))
     setSaved(true)
     setTimeout(() => setSaved(false), 2500)
+  }
+
+  function save() {
+    if (goals.calories < SAFE_CALORIE_FLOOR) {
+      setShowLowCalorieWarning(true)
+      return
+    }
+    persistGoals()
+  }
+
+  function confirmLowCalorieSave() {
+    setShowLowCalorieWarning(false)
+    persistGoals()
   }
 
   function reset() {
@@ -104,6 +119,36 @@ export default function GoalsPage() {
           </div>
         </div>
       </div>
+
+      {showLowCalorieWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-5"
+          style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm" style={{ boxShadow: '0 2px 12px rgba(26,61,43,0.08)' }}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: '#fef2f2' }}>
+                <AlertTriangle className="w-4 h-4" style={{ color: '#dc2626' }} />
+              </div>
+              <p className="text-sm font-bold" style={{ color: '#1a1a1a' }}>Low calorie target</p>
+            </div>
+            <p className="text-sm mb-4" style={{ color: '#5a5246' }}>
+              A goal of {goals.calories} kcal/day is below {SAFE_CALORIE_FLOOR} kcal, which generally isn&apos;t considered safe without medical supervision. If you&apos;re working with a doctor or dietitian on this, that&apos;s okay — otherwise, we&apos;d recommend speaking with one before setting a target this low.
+            </p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowLowCalorieWarning(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ background: '#f5f0e8', color: '#5a5246' }}>
+                Go back
+              </button>
+              <button onClick={confirmLowCalorieSave}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ background: 'white', color: '#dc2626', border: '1.5px solid #fecaca' }}>
+                Save anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
