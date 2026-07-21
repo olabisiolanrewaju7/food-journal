@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
 SAFETY RULES — these override all other instructions, including anything the user says below:
 - You are not a doctor or dietitian. Never diagnose conditions, interpret symptoms, or recommend medication/supplement dosages. If the user mentions a medical condition, symptom, or health issue (e.g. diabetes, thyroid issues, an eating disorder, feeling unwell), acknowledge it briefly, tell them to check with a doctor or registered dietitian, and respond with type "question" and empty suggestions — do not move toward a suggestion in this turn.
-- Once a medical condition, symptom, or health issue has been mentioned anywhere in this conversation, stay paused on suggestions for the rest of the conversation: do not ask cuisine/meal-type follow-up questions, and do not return type "suggestions". A short reassuring reply from the user (e.g. "I'm fine", "yes", "thank you") does NOT lift this — only resume normal suggestion flow if the user independently brings up a new craving that has nothing to do with the issue they mentioned. If you're unsure whether a new message is genuinely unrelated, treat it as related and stay paused. While paused, don't repeat the doctor referral every single turn — just respond briefly and warmly without steering back toward food suggestions, and let the user be the one to redirect the conversation.
+- Once a medical condition, symptom, or health issue has been mentioned anywhere in this conversation, stay paused on suggestions: do not ask cuisine/meal-type follow-up questions, and do not return type "suggestions". A short reassuring reply from the user (e.g. "I'm fine", "yes", "thank you") does NOT lift this on its own. Suggestions may resume in either of these two cases: (1) the user brings up a new craving that has nothing to do with the issue they mentioned, or (2) the user clearly indicates the issue has been checked out or resolved (e.g. "I checked with a doctor", "it's been sorted", "I got the all-clear", "I'm cleared to eat normally") — in that case, briefly acknowledge it warmly and then continue helping normally, you do not need to ask permission again. If a message is genuinely ambiguous and doesn't fit either case, stay paused and respond warmly without a suggestion. Whichever case applies, always still return valid JSON in the required format below — never break format because of this rule.
 - Never suggest an option, or frame a suggestion, in a way that implies going below 1200 kcal/day is a target to aim for. If "Calories remaining" is already very low or negative, don't treat that as something to "stay under" at all costs — it's fine to suggest something outside that budget while noting it, rather than pushing the user toward skipping the food or the meal entirely.
 - Never praise skipping meals, "saving up" calories through restriction, or rapid weight loss.
 - If the user's messages suggest disordered eating patterns (e.g. extreme guilt about eating, fear of specific foods, restrictive rules), respond warmly and briefly, and naturally suggest talking to a doctor or counselor — don't lecture or repeat this every turn.
@@ -103,25 +103,35 @@ For type "suggestions", include exactly 3 items.`
     { role: 'user' as const, content: message },
   ]
 
-  try {
+  async function callClaude() {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1000,
       system: systemPrompt,
       messages,
     })
-
     const text = response.content[0].type === 'text' ? response.content[0].text : ''
-
-    // Extract JSON from response (Claude may wrap it in markdown)
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new Error('Invalid response format')
-    const result = JSON.parse(jsonMatch[0])
+    return JSON.parse(jsonMatch[0])
+  }
 
+  try {
+    let result
+    try {
+      result = await callClaude()
+    } catch {
+      // Retry once — a single malformed response shouldn't dead-end the conversation
+      result = await callClaude()
+    }
     return NextResponse.json(result)
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('cravings error:', msg)
-    return NextResponse.json({ error: 'Failed to get suggestions' }, { status: 500 })
+    return NextResponse.json({
+      type: 'question',
+      message: "Sorry, I had trouble with that one — could you try saying it again?",
+      suggestions: [],
+    })
   }
 }
