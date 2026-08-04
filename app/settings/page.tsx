@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Settings, Target, User, CreditCard, ChevronRight, Activity } from 'lucide-react'
+import { Settings, Target, User, CreditCard, ChevronRight, Activity, LogOut } from 'lucide-react'
+import { signOut } from 'next-auth/react'
 
 const MENU = [
   {
@@ -72,6 +73,21 @@ export default function SettingsPage() {
               <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: '#b5a99a' }} />
             </Link>
           ))}
+        </div>
+
+        <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 2px 12px rgba(26,61,43,0.08)' }}>
+          <button
+            onClick={() => signOut({ callbackUrl: '/login' })}
+            className="w-full flex items-center gap-4 px-4 py-4 active:bg-red-50 transition-colors">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: '#fef2f2' }}>
+              <LogOut className="w-5 h-5" style={{ color: '#dc2626' }} />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-sm font-bold" style={{ color: '#dc2626' }}>Sign Out</p>
+              <p className="text-xs mt-0.5" style={{ color: '#9c8e7e' }}>You'll need to log in again to access your data</p>
+            </div>
+          </button>
         </div>
       </div>
     </div>
