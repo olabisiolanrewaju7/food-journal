@@ -66,10 +66,22 @@ export async function insertEntry(entry: {
 export async function getEntriesByDate(userId: number, date: string) {
   const db = getDb()
   const result = await db.execute({
-    sql: `SELECT * FROM food_entries WHERE user_id = ? AND timestamp LIKE ? ORDER BY timestamp ASC`,
-    args: [userId, `${date}%`],
+    sql: `SELECT * FROM food_entries WHERE user_id = ? AND DATE(timestamp) = ? ORDER BY timestamp ASC`,
+    args: [userId, date],
   })
-  return result.rows
+  return result.rows.map(row => ({
+    id: Number(row.id),
+    user_id: Number(row.user_id),
+    timestamp: String(row.timestamp),
+    food_name: String(row.food_name),
+    description: String(row.description ?? ''),
+    calories: Number(row.calories),
+    protein: Number(row.protein),
+    carbs: Number(row.carbs),
+    fat: Number(row.fat),
+    fiber: Number(row.fiber),
+    image_data: row.image_data ? String(row.image_data) : undefined,
+  }))
 }
 
 export async function updateEntry(
