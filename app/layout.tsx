@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 import './globals.css'
 import BottomNav from '@/components/BottomNav'
 import Providers from '@/components/Providers'
+import TabShell from '@/components/TabShell'
 
 // Force all pages to be server-rendered dynamically — required for NextAuth
 export const dynamic = 'force-dynamic'
@@ -28,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} min-h-screen`} style={{ background: '#c8e6c9', color: '#1a1a1a' }}>
         <Providers>
           <div className="max-w-md mx-auto pb-24">
-            {children}
+            <TabShell>{children}</TabShell>
           </div>
           <Suspense><BottomNav /></Suspense>
         </Providers>
