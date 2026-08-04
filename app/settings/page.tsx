@@ -85,7 +85,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex-1 min-w-0 text-left">
               <p className="text-sm font-bold" style={{ color: '#dc2626' }}>Sign Out</p>
-              <p className="text-xs mt-0.5" style={{ color: '#9c8e7e' }}>You'll need to log in again to access your data</p>
+              <p className="text-xs mt-0.5" style={{ color: '#9c8e7e' }}>You&apos;ll need to log in again to access your data</p>
             </div>
           </button>
         </div>
