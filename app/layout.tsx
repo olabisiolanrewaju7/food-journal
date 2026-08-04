@@ -5,6 +5,9 @@ import './globals.css'
 import BottomNav from '@/components/BottomNav'
 import Providers from '@/components/Providers'
 
+// Force all pages to be server-rendered dynamically — required for NextAuth
+export const dynamic = 'force-dynamic'
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
