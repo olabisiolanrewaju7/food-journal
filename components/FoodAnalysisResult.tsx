@@ -125,7 +125,7 @@ export default function FoodAnalysisResult({ analysis, imageDataUrl, onConfirm, 
     <div className="rounded-2xl overflow-hidden bg-white" style={{ boxShadow: '0 2px 16px rgba(26,61,43,0.12)' }}>
       {imageDataUrl && (
         <div className="relative">
-          <img src={imageDataUrl} alt={current.food_name} className="w-full object-contain" />
+          <img src={imageDataUrl} alt={current.food_name} className="w-full object-cover" style={{ maxHeight: '260px' }} />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26,61,43,0.75), transparent 50%)' }} />
           <div className="absolute bottom-3 left-4 right-4">
             <p className="text-white font-bold text-lg leading-tight line-clamp-2">{current.food_name}</p>
