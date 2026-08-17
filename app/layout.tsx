@@ -15,6 +15,14 @@ export const metadata: Metadata = {
   title: 'FoodJournal',
   description: 'AI-powered food tracking and nutrition analysis',
   manifest: '/manifest.json',
+  icons: {
+    apple: [
+      { url: '/icon-180.png', sizes: '180x180' },
+      { url: '/icon-167.png', sizes: '167x167' },
+      { url: '/icon-152.png', sizes: '152x152' },
+      { url: '/icon-120.png', sizes: '120x120' },
+    ],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
