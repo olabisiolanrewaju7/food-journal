@@ -32,7 +32,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <div className="px-5 pt-14 pb-10 text-center"
+      <div className="px-5 pt-14 pb-10 text-center safe-area-pt"
         style={{ background: 'linear-gradient(135deg, #004d1a 0%, #007a2e 60%, #00c853 100%)' }}>
         <div className="flex items-center justify-center gap-2 mb-2">
           <Salad className="w-7 h-7 text-white" />

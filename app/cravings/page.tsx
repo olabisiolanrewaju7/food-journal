@@ -496,7 +496,7 @@ export default function CravingsPage() {
   return (
     <div className="flex flex-col" style={{ height: '100dvh' }}>
       {/* Header */}
-      <div className="relative px-5 pt-14 pb-6 overflow-hidden flex-shrink-0"
+      <div className="relative px-5 pt-14 pb-6 overflow-hidden safe-area-pt flex-shrink-0"
         style={{ background: 'linear-gradient(135deg, #004d1a 0%, #007a2e 60%, #00c853 100%)' }}>
         <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-10"
           style={{ background: 'radial-gradient(circle, #ffffff, transparent)' }} />
