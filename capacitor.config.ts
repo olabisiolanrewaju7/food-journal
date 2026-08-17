@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  appId: 'com.foodjournal.app',
+  appId: 'com.ruach.foodjournal',
   appName: 'FoodJournal',
   // Point to live Vercel deployment — API routes stay server-side
   server: {

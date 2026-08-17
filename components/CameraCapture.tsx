@@ -45,7 +45,7 @@ export default function CameraCapture({ onAnalysis, onPreviewChange }: { onAnaly
   if (preview) {
     return (
       <div className="relative rounded-2xl overflow-hidden" style={{ boxShadow: '0 2px 12px rgba(26,61,43,0.12)' }}>
-        <img src={preview} alt="Food" className="w-full max-h-72 object-cover" />
+        <img src={preview} alt="Food" className="w-full object-contain" />
         {analyzing && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3"
             style={{ background: 'rgba(26,61,43,0.7)', backdropFilter: 'blur(4px)' }}>
