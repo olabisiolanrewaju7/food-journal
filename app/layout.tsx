@@ -14,6 +14,12 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'FoodJournal',
   description: 'AI-powered food tracking and nutrition analysis',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'FoodJournal',
+  },
 }
 
 export const viewport: Viewport = {
