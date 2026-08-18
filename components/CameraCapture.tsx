@@ -1,10 +1,10 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Camera, ImagePlus, X, Loader2, Zap } from 'lucide-react'
+import { Camera, ImagePlus, X, Loader2, Zap, ClipboardEdit } from 'lucide-react'
 import { FoodAnalysis } from '@/types'
 
-export default function CameraCapture({ onAnalysis, onPreviewChange }: { onAnalysis: (a: FoodAnalysis, img: string) => void; onPreviewChange?: (hasPreview: boolean) => void }) {
+export default function CameraCapture({ onAnalysis, onPreviewChange, onManualEntry }: { onAnalysis: (a: FoodAnalysis, img: string) => void; onPreviewChange?: (hasPreview: boolean) => void; onManualEntry?: () => void }) {
   const [preview, setPreview] = useState<string | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -100,6 +100,14 @@ export default function CameraCapture({ onAnalysis, onPreviewChange }: { onAnaly
           <ImagePlus className="w-4 h-4" />
           Upload from Gallery
         </button>
+        {onManualEntry && (
+          <button onClick={onManualEntry}
+            className="w-full flex items-center justify-center gap-1.5 py-2 text-sm font-semibold active:opacity-70 transition-opacity"
+            style={{ color: '#9c8e7e' }}>
+            <ClipboardEdit className="w-3.5 h-3.5" />
+            Enter manually
+          </button>
+        )}
       </div>
     </>
   )

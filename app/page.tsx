@@ -5,6 +5,7 @@ import { Salad, LogOut, RefreshCw } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import CameraCapture from '@/components/CameraCapture'
 import FoodAnalysisResult from '@/components/FoodAnalysisResult'
+import ManualFoodEntry from '@/components/ManualFoodEntry'
 import FoodLogList from '@/components/FoodLogList'
 import MacroProgressBars from '@/components/MacroProgressBars'
 import { FoodAnalysis, FoodEntry } from '@/types'
@@ -17,6 +18,7 @@ export default function HomePage() {
   const [refreshing, setRefreshing] = useState(false)
   const [pendingAnalysis, setPendingAnalysis] = useState<{ analysis: FoodAnalysis; imageDataUrl: string } | null>(null)
   const [cameraHasPreview, setCameraHasPreview] = useState(false)
+  const [manualEntry, setManualEntry] = useState(false)
   const today = new Date().toISOString().split('T')[0]
 
   const fetchEntries = useCallback(async (showSpinner = false) => {
@@ -43,9 +45,9 @@ export default function HomePage() {
 
   // Hide bottom nav while reviewing an analysis so the Log button is always reachable
   useEffect(() => {
-    setHideNav(!!pendingAnalysis || cameraHasPreview)
+    setHideNav(!!pendingAnalysis || cameraHasPreview || manualEntry)
     return () => setHideNav(false)
-  }, [pendingAnalysis, cameraHasPreview, setHideNav])
+  }, [pendingAnalysis, cameraHasPreview, manualEntry, setHideNav])
 
   return (
     <div className="min-h-screen">
@@ -103,8 +105,17 @@ export default function HomePage() {
             onConfirm={() => { setPendingAnalysis(null); fetchEntries() }}
             onDiscard={() => setPendingAnalysis(null)}
           />
+        ) : manualEntry ? (
+          <ManualFoodEntry
+            onConfirm={() => { setManualEntry(false); fetchEntries() }}
+            onDiscard={() => setManualEntry(false)}
+          />
         ) : (
-          <CameraCapture onAnalysis={(a, img) => setPendingAnalysis({ analysis: a, imageDataUrl: img })} onPreviewChange={setCameraHasPreview} />
+          <CameraCapture
+            onAnalysis={(a, img) => setPendingAnalysis({ analysis: a, imageDataUrl: img })}
+            onPreviewChange={setCameraHasPreview}
+            onManualEntry={() => setManualEntry(true)}
+          />
         )}
 
         <FoodLogList
