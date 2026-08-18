@@ -102,10 +102,10 @@ export default function CameraCapture({ onAnalysis, onPreviewChange, onManualEnt
         </button>
         {onManualEntry && (
           <button onClick={onManualEntry}
-            className="w-full flex items-center justify-center gap-1.5 py-2 text-sm font-semibold active:opacity-70 transition-opacity"
-            style={{ color: '#9c8e7e' }}>
-            <ClipboardEdit className="w-3.5 h-3.5" />
-            Enter manually
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold active:opacity-80 transition-opacity"
+            style={{ background: '#f0fdf4', color: '#007a2e', border: '1.5px solid #bbf7d0' }}>
+            <ClipboardEdit className="w-4 h-4" />
+            Enter Manually
           </button>
         )}
       </div>
