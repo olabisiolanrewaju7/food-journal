@@ -15,7 +15,7 @@ const tabs: { path: TabPath; label: string; icon: React.ElementType }[] = [
   { path: '/settings', label: 'Settings', icon: Settings },
 ]
 
-const HIDE_ON = ['/login', '/register', '/splash', '/forgot-password', '/reset-password']
+const HIDE_ON = ['/login', '/register', '/splash', '/forgot-password', '/reset-password', '/privacy']
 
 export default function BottomNav() {
   const pathname = usePathname()

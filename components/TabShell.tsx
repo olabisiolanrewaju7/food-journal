@@ -8,7 +8,7 @@ import CravingsPage from '@/app/cravings/page'
 import CoachPage from '@/app/coach/page'
 import SettingsPage from '@/app/settings/page'
 
-const AUTH_PREFIXES = ['/login', '/register', '/splash', '/forgot-password', '/reset-password']
+const AUTH_PREFIXES = ['/login', '/register', '/splash', '/forgot-password', '/reset-password', '/privacy']
 
 export default function TabShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

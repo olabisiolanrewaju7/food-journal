@@ -103,6 +103,11 @@ export default function RegisterPage() {
             Already have an account?{' '}
             <Link href="/login" className="font-semibold" style={{ color: '#007a2e' }}>Sign in</Link>
           </p>
+
+          <p className="text-center text-xs mt-4" style={{ color: '#b5a99a' }}>
+            By creating an account, you agree to our{' '}
+            <Link href="/privacy" className="font-semibold underline" style={{ color: '#9c8e7e' }}>Privacy Policy</Link>
+          </p>
         </div>
       </div>
     </div>

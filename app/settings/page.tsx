@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Settings, Target, User, CreditCard, ChevronRight, Activity, LogOut } from 'lucide-react'
+import { Settings, Target, User, CreditCard, ChevronRight, Activity, LogOut, Shield } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 
 const MENU = [
@@ -36,6 +36,14 @@ const MENU = [
     iconColor: '#7c3aed',
     title: 'Payment Details',
     subtitle: 'Manage your billing and payment method',
+  },
+  {
+    href: '/privacy',
+    icon: Shield,
+    iconBg: '#f5f0e8',
+    iconColor: '#9c8e7e',
+    title: 'Privacy Policy',
+    subtitle: 'How we handle your data',
   },
 ]
 
