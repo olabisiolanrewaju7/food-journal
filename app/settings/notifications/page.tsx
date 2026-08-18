@@ -40,7 +40,13 @@ export default function NotificationsPage() {
   useEffect(() => {
     setIsNative(Capacitor.isNativePlatform())
     const stored = localStorage.getItem(PREFS_KEY)
-    if (stored) setPrefs(JSON.parse(stored))
+    if (stored) {
+      try {
+        setPrefs({ ...DEFAULT_PREFS, ...JSON.parse(stored) })
+      } catch {
+        // Corrupted or outdated shape in localStorage — fall back to defaults
+      }
+    }
   }, [])
 
   const reminderTimes = useMemo(
