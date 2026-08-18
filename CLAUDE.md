@@ -42,7 +42,7 @@ On Vercel, set `NEXTAUTH_URL=https://food-journal-jet.vercel.app` explicitly in 
 ### Authentication & Middleware
 
 - NextAuth credentials provider with bcrypt-hashed passwords (`lib/auth.ts`), cost factor 8 (not 10 — causes cold-start timeouts on Vercel)
-- `middleware.ts` redirects unauthenticated users to `/splash` — public routes: `/login`, `/register`, `/splash`, `/forgot-password`, `/reset-password`, `/api/auth`, `/api/register`
+- `middleware.ts` redirects unauthenticated users to `/splash` — public routes: `/login`, `/register`, `/splash`, `/forgot-password`, `/reset-password`, `/privacy`, `/api/auth`, `/api/register`
 - Session is JWT; `user.id` stored in the token, available via `getServerSession(authOptions)` in API routes
 - `types/next-auth.d.ts` extends NextAuth types to include `session.user.id` — do not remove
 - All DB queries are scoped to `user_id` — never query without it
@@ -89,6 +89,7 @@ All POST routes require `Content-Type: application/json` and a valid session (ex
 | `POST /api/auth/forgot-password` | Generates reset token, sends email via Resend |
 | `POST /api/auth/reset-password` | Validates token, updates password hash |
 | `POST /api/register` | Public; bcrypt cost 8 |
+| `POST\|DELETE /api/push/register` | Stores/removes a device's push token in `push_tokens`; see Notifications section — **table does not exist in Turso yet**, route will fail until it's created |
 
 ### Database (`database/db.ts`)
 
@@ -98,6 +99,7 @@ All functions are **async** — uses `@libsql/client` (Turso). No synchronous DB
 - `lastInsertRowid` returns `BigInt` — always wrap with `Number()` before returning in JSON
 - No migration logic at request time — tables must already exist in Turso
 - Tables: `users`, `food_entries` (includes `image_data` TEXT), `body_stats`, `password_reset_tokens`
+- `push_tokens` (id, user_id, token UNIQUE, platform, created_at) is referenced by `database/db.ts` and `/api/push/register` but **has not been created in Turso** — this is intentional groundwork laid ahead of Apple Developer account access; the endpoint fails silently (caught client-side) until the table exists
 
 ### Cravings Feature (`/cravings`)
 
@@ -114,6 +116,14 @@ All functions are **async** — uses `@libsql/client` (Turso). No synchronous DB
 - Three tabs: Log Stats, Progress (Recharts line chart), My Goal
 - Goal (target weight, body fat %, optional date) stored in `localStorage` (`healthyyou-body-goal`)
 - ETA calculated client-side from rate of change across all logged entries
+
+### Notifications (`/settings/notifications`)
+
+- **Local reminders** (fully functional): `@capacitor/local-notifications` schedules multiple daily-repeating notifications starting at a user-chosen time, spaced by a chosen interval (2/3/4/6/8h), stopping before midnight rather than rolling forward indefinitely — `computeReminderTimes()` generates the schedule client-side. Notification IDs are `1001` through `1001 + MAX_REMINDERS - 1` (currently 8); toggling off cancels that whole ID range regardless of how many were actually scheduled.
+- **Push groundwork** (not yet sending): `@capacitor/push-notifications` registers a device token client-side and POSTs it to `/api/push/register`, which upserts into `push_tokens` — but that table doesn't exist yet, and there is no APNs-sending code (needs an Auth Key from an active Apple Developer account). Toggling reminders off also calls `DELETE /api/push/register?token=...` to remove the stored token.
+- Both plugins are gated behind `Capacitor.isNativePlatform()` — the page shows an informational banner instead of a toggle when accessed via a browser/PWA, since neither plugin functions there.
+- Preferences stored in `localStorage` (`healthyyou-notification-prefs`); loader merges over `DEFAULT_PREFS` rather than trusting stored data outright, since the schema has already changed once (single `time` → `startTime` + `intervalHours`) and un-merged old data crashes `computeReminderTimes()`.
+- Registered push token cached in `localStorage` (`healthyyou-push-token`) so it can be looked up again for deletion when reminders are toggled off.
 
 ### Rate Limiting
 
@@ -149,6 +159,8 @@ localStorage as stale-while-revalidate:
 | `healthyyou-bio` | `{ name, age, height, weight, gender }` |
 | `healthyyou-body-goal` | `{ target_weight_kg, target_body_fat_pct, target_date }` |
 | `healthyyou-craving-prefs` | `{ cuisines, pastChoices, dietaryNotes }` |
+| `healthyyou-notification-prefs` | `{ enabled, startTime, intervalHours }` |
+| `healthyyou-push-token` | Registered device push token, if any (for later deletion) |
 | `fj-entries-YYYY-MM-DD` | Today's food entries array |
 | `fj-summary-N` | N-day history summary |
 | `fj-advice-{slug}` | Cached coach advice with timestamp |
@@ -163,6 +175,6 @@ localStorage as stale-while-revalidate:
 
 ### Settings Pages
 
-`/settings` links to: `/settings/goals` (nutrition targets), `/settings/bio` (profile), `/settings/body-stats` (weight tracking + goals), `/settings/payment` (Stripe placeholder, not wired up).
+`/settings` links to: `/settings/goals` (nutrition targets), `/settings/bio` (profile), `/settings/body-stats` (weight tracking + goals), `/settings/notifications` (meal reminders, see Notifications section), `/settings/payment` (Stripe placeholder, not wired up).
 
 `MacroProgressBars` and `app/settings/goals/page.tsx` both define `DEFAULT_GOALS` — keep them in sync.

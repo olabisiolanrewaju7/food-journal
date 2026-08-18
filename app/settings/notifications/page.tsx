@@ -6,6 +6,7 @@ import { Bell, ArrowLeft, Check, Smartphone } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 
 const PREFS_KEY = 'healthyyou-notification-prefs'
+const PUSH_TOKEN_KEY = 'healthyyou-push-token'
 const REMINDER_BASE_ID = 1001
 const MAX_REMINDERS = 8
 const INTERVAL_OPTIONS = [2, 3, 4, 6, 8]
@@ -68,6 +69,7 @@ export default function NotificationsPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token, platform: 'ios' }),
           })
+          localStorage.setItem(PUSH_TOKEN_KEY, token)
         } catch {
           // Non-critical — local reminders still work without server push
         }
@@ -77,6 +79,17 @@ export default function NotificationsPage() {
       // Push registration is best-effort; local notifications remain unaffected
     }
   }, [])
+
+  async function unregisterPushToken() {
+    const token = localStorage.getItem(PUSH_TOKEN_KEY)
+    if (!token) return
+    try {
+      await fetch(`/api/push/register?token=${encodeURIComponent(token)}`, { method: 'DELETE' })
+      localStorage.removeItem(PUSH_TOKEN_KEY)
+    } catch {
+      // Non-critical — worst case a stale token lingers server-side
+    }
+  }
 
   async function cancelReminders() {
     const { LocalNotifications } = await import('@capacitor/local-notifications')
@@ -116,6 +129,7 @@ export default function NotificationsPage() {
       await registerPushToken()
     } else {
       await cancelReminders()
+      await unregisterPushToken()
     }
     setPrefs(p => ({ ...p, enabled: next }))
   }
