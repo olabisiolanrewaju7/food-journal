@@ -1,15 +1,34 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bell, ArrowLeft, Check, Smartphone } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 
 const PREFS_KEY = 'healthyyou-notification-prefs'
-const REMINDER_ID = 1001
-const DEFAULT_PREFS = { enabled: false, time: '19:00' }
+const REMINDER_BASE_ID = 1001
+const MAX_REMINDERS = 8
+const INTERVAL_OPTIONS = [2, 3, 4, 6, 8]
+const DEFAULT_PREFS = { enabled: false, startTime: '08:00', intervalHours: 4 }
 
 type Prefs = typeof DEFAULT_PREFS
+
+function computeReminderTimes(startTime: string, intervalHours: number) {
+  const [startHour, startMinute] = startTime.split(':').map(Number)
+  const times: { hour: number; minute: number }[] = []
+  let totalMinutes = startHour * 60 + startMinute
+  for (let i = 0; i < MAX_REMINDERS && totalMinutes < 24 * 60; i++) {
+    times.push({ hour: Math.floor(totalMinutes / 60), minute: totalMinutes % 60 })
+    totalMinutes += intervalHours * 60
+  }
+  return times
+}
+
+function formatTime(hour: number, minute: number) {
+  const period = hour >= 12 ? 'PM' : 'AM'
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12
+  return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`
+}
 
 export default function NotificationsPage() {
   const router = useRouter()
@@ -23,6 +42,11 @@ export default function NotificationsPage() {
     const stored = localStorage.getItem(PREFS_KEY)
     if (stored) setPrefs(JSON.parse(stored))
   }, [])
+
+  const reminderTimes = useMemo(
+    () => computeReminderTimes(prefs.startTime, prefs.intervalHours),
+    [prefs.startTime, prefs.intervalHours]
+  )
 
   const registerPushToken = useCallback(async () => {
     if (!Capacitor.isNativePlatform()) return
@@ -48,23 +72,25 @@ export default function NotificationsPage() {
     }
   }, [])
 
-  async function scheduleReminder(time: string) {
+  async function cancelReminders() {
     const { LocalNotifications } = await import('@capacitor/local-notifications')
-    const [hour, minute] = time.split(':').map(Number)
-    await LocalNotifications.cancel({ notifications: [{ id: REMINDER_ID }] })
-    await LocalNotifications.schedule({
-      notifications: [{
-        id: REMINDER_ID,
-        title: 'FoodJournal',
-        body: "Don't forget to log your meals today!",
-        schedule: { on: { hour, minute }, repeats: true, allowWhileIdle: true },
-      }],
+    await LocalNotifications.cancel({
+      notifications: Array.from({ length: MAX_REMINDERS }, (_, i) => ({ id: REMINDER_BASE_ID + i })),
     })
   }
 
-  async function cancelReminder() {
+  async function scheduleReminders(startTime: string, intervalHours: number) {
     const { LocalNotifications } = await import('@capacitor/local-notifications')
-    await LocalNotifications.cancel({ notifications: [{ id: REMINDER_ID }] })
+    await cancelReminders()
+    const times = computeReminderTimes(startTime, intervalHours)
+    await LocalNotifications.schedule({
+      notifications: times.map((t, i) => ({
+        id: REMINDER_BASE_ID + i,
+        title: 'FoodJournal',
+        body: "Don't forget to log your meals today!",
+        schedule: { on: { hour: t.hour, minute: t.minute }, repeats: true, allowWhileIdle: true },
+      })),
+    })
   }
 
   async function handleToggle(next: boolean) {
@@ -80,17 +106,22 @@ export default function NotificationsPage() {
         setError('Notification permission was denied. Enable it for FoodJournal in your phone\'s Settings app.')
         return
       }
-      await scheduleReminder(prefs.time)
+      await scheduleReminders(prefs.startTime, prefs.intervalHours)
       await registerPushToken()
     } else {
-      await cancelReminder()
+      await cancelReminders()
     }
     setPrefs(p => ({ ...p, enabled: next }))
   }
 
-  async function handleTimeChange(time: string) {
-    setPrefs(p => ({ ...p, time }))
-    if (prefs.enabled && isNative) await scheduleReminder(time)
+  async function handleStartTimeChange(startTime: string) {
+    setPrefs(p => ({ ...p, startTime }))
+    if (prefs.enabled && isNative) await scheduleReminders(startTime, prefs.intervalHours)
+  }
+
+  async function handleIntervalChange(intervalHours: number) {
+    setPrefs(p => ({ ...p, intervalHours }))
+    if (prefs.enabled && isNative) await scheduleReminders(prefs.startTime, intervalHours)
   }
 
   function save() {
@@ -135,14 +166,14 @@ export default function NotificationsPage() {
               <Bell className="w-4 h-4" style={{ color: '#00c853' }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold" style={{ color: '#1a1a1a' }}>Daily meal reminder</p>
-              <p className="text-xs" style={{ color: '#b5a99a' }}>A gentle nudge to log what you ate</p>
+              <p className="text-sm font-semibold" style={{ color: '#1a1a1a' }}>Meal reminders</p>
+              <p className="text-xs" style={{ color: '#b5a99a' }}>Recurring nudges throughout the day</p>
             </div>
             <button
               onClick={() => handleToggle(!prefs.enabled)}
               className="relative w-11 h-6 rounded-full flex-shrink-0 transition-colors"
               style={{ background: prefs.enabled ? '#00c853' : '#e8e0d4' }}
-              aria-label="Toggle daily meal reminder"
+              aria-label="Toggle meal reminders"
             >
               <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all"
                 style={{ left: prefs.enabled ? '22px' : '2px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
@@ -150,18 +181,47 @@ export default function NotificationsPage() {
           </div>
 
           {prefs.enabled && (
-            <div className="flex items-center gap-3 px-4 py-4">
-              <div className="w-9 h-9 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold" style={{ color: '#1a1a1a' }}>Remind me at</p>
+            <>
+              <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: '1px solid #f5f0e8' }}>
+                <div className="w-9 h-9 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold" style={{ color: '#1a1a1a' }}>Start reminding me at</p>
+                </div>
+                <input
+                  type="time" value={prefs.startTime}
+                  onChange={e => handleStartTimeChange(e.target.value)}
+                  className="px-3 py-2 rounded-xl text-sm font-bold focus:outline-none"
+                  style={{ background: '#f5f0e8', color: '#1a1a1a', border: '1.5px solid #e8e0d4' }}
+                />
               </div>
-              <input
-                type="time" value={prefs.time}
-                onChange={e => handleTimeChange(e.target.value)}
-                className="px-3 py-2 rounded-xl text-sm font-bold focus:outline-none"
-                style={{ background: '#f5f0e8', color: '#1a1a1a', border: '1.5px solid #e8e0d4' }}
-              />
-            </div>
+
+              <div className="px-4 py-4" style={{ borderBottom: '1px solid #f5f0e8' }}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 flex-shrink-0" />
+                  <p className="text-sm font-semibold flex-1" style={{ color: '#1a1a1a' }}>Every</p>
+                </div>
+                <div className="flex gap-2 flex-wrap pl-12">
+                  {INTERVAL_OPTIONS.map(h => (
+                    <button key={h} onClick={() => handleIntervalChange(h)}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold border transition-all"
+                      style={prefs.intervalHours === h
+                        ? { background: '#004d1a', color: 'white', borderColor: '#004d1a' }
+                        : { background: 'white', color: '#9c8e7e', borderColor: '#e8e0d4' }}>
+                      {h}h
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="px-4 py-4 pl-16">
+                <p className="text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color: '#b5a99a' }}>
+                  Reminders at
+                </p>
+                <p className="text-sm" style={{ color: '#5a5246' }}>
+                  {reminderTimes.map(t => formatTime(t.hour, t.minute)).join(' · ')}
+                </p>
+              </div>
+            </>
           )}
         </div>
 
