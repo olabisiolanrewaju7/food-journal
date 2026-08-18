@@ -191,6 +191,34 @@ export async function deleteBodyStat(id: number, userId: number) {
   })
 }
 
+// ── Push tokens ──────────────────────────────────────────────────────────────
+
+export async function upsertPushToken(userId: number, token: string, platform: string) {
+  const db = getDb()
+  await db.execute({
+    sql: `INSERT INTO push_tokens (user_id, token, platform) VALUES (?, ?, ?)
+          ON CONFLICT(token) DO UPDATE SET user_id = excluded.user_id, platform = excluded.platform`,
+    args: [userId, token, platform],
+  })
+}
+
+export async function deletePushToken(token: string, userId: number) {
+  const db = getDb()
+  await db.execute({
+    sql: `DELETE FROM push_tokens WHERE token = ? AND user_id = ?`,
+    args: [token, userId],
+  })
+}
+
+export async function getPushTokensForUser(userId: number) {
+  const db = getDb()
+  const result = await db.execute({
+    sql: `SELECT token, platform FROM push_tokens WHERE user_id = ?`,
+    args: [userId],
+  })
+  return result.rows.map(row => ({ token: String(row.token), platform: String(row.platform) }))
+}
+
 export async function getRecentEntries(userId: number, days: number) {
   const db = getDb()
   const result = await db.execute({

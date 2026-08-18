@@ -14,6 +14,8 @@
     "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.5.0",
     "@capacitor/ios": "^8.5.0",
+    "@capacitor/local-notifications": "^8.3.0",
+    "@capacitor/push-notifications": "^8.1.2",
     "@capacitor/splash-screen": "^8.0.2",
     "@libsql/client": "^0.17.4",
     "@types/bcryptjs": "^2.4.6",

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Settings, Target, User, CreditCard, ChevronRight, Activity, LogOut, Shield } from 'lucide-react'
+import { Settings, Target, User, CreditCard, ChevronRight, Activity, LogOut, Shield, Bell } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 
 const MENU = [
@@ -28,6 +28,14 @@ const MENU = [
     iconColor: '#0284c7',
     title: 'Body Stats & Progress',
     subtitle: 'Track weight, body fat & goal timeline',
+  },
+  {
+    href: '/settings/notifications',
+    icon: Bell,
+    iconBg: '#fff3e0',
+    iconColor: '#f97316',
+    title: 'Notifications',
+    subtitle: 'Daily reminders to log your meals',
   },
   {
     href: '/settings/payment',
