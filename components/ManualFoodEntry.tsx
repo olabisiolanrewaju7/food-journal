@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, X, Sparkles, Loader2, ClipboardEdit, Flame, Dumbbell, Wheat, Droplets, Leaf } from 'lucide-react'
+import { Check, X, Sparkles, Loader2, ClipboardEdit, Flame, Dumbbell, Wheat, Droplets, Leaf, UtensilsCrossed, FileText } from 'lucide-react'
 
 interface Props { onConfirm: () => void; onDiscard: () => void }
 
@@ -106,14 +106,17 @@ export default function ManualFoodEntry({ onConfirm, onDiscard }: Props) {
       <div>
         <label className="block text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#9c8e7e' }}>Food name</label>
         <div className="flex gap-2">
-          <input
-            type="text" autoFocus
-            value={form.food_name}
-            onChange={e => update('food_name', e.target.value)}
-            className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
-            style={{ background: '#f5f0e8', color: '#1a1a1a' }}
-            placeholder="e.g. grilled chicken salad"
-          />
+          <div className="relative flex-1">
+            <UtensilsCrossed className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#00c853' }} />
+            <input
+              type="text" autoFocus
+              value={form.food_name}
+              onChange={e => update('food_name', e.target.value)}
+              className="w-full pl-10 pr-3 py-2.5 rounded-xl text-sm outline-none"
+              style={{ background: 'white', color: '#1a1a1a', border: '1.5px solid #d4f4dd' }}
+              placeholder="e.g. grilled chicken salad"
+            />
+          </div>
           <button
             onClick={estimateWithAI}
             disabled={analysing || !form.food_name.trim()}
@@ -129,14 +132,17 @@ export default function ManualFoodEntry({ onConfirm, onDiscard }: Props) {
 
       <div>
         <label className="block text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#9c8e7e' }}>Description (optional)</label>
-        <input
-          type="text"
-          value={form.description}
-          onChange={e => update('description', e.target.value)}
-          className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-          style={{ background: '#f5f0e8', color: '#1a1a1a' }}
-          placeholder="e.g. large bowl, homemade"
-        />
+        <div className="relative">
+          <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#00c853' }} />
+          <input
+            type="text"
+            value={form.description}
+            onChange={e => update('description', e.target.value)}
+            className="w-full pl-10 pr-3 py-2.5 rounded-xl text-sm outline-none"
+            style={{ background: 'white', color: '#1a1a1a', border: '1.5px solid #d4f4dd' }}
+            placeholder="e.g. large bowl, homemade"
+          />
+        </div>
       </div>
 
       {/* Calories */}
