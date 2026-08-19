@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, X, Sparkles, Loader2, ClipboardEdit } from 'lucide-react'
+import { Check, X, Sparkles, Loader2, ClipboardEdit, Flame, Dumbbell, Wheat, Droplets, Leaf } from 'lucide-react'
 
 interface Props { onConfirm: () => void; onDiscard: () => void }
 
@@ -87,24 +87,12 @@ export default function ManualFoodEntry({ onConfirm, onDiscard }: Props) {
     }
   }
 
-  function numField(label: string, key: keyof FormState, unit: string) {
-    return (
-      <div>
-        <label className="block text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#9c8e7e' }}>{label}</label>
-        <div className="flex items-center gap-1">
-          <input
-            type="number" min={0}
-            value={form[key]}
-            onChange={e => update(key, e.target.value)}
-            placeholder="0"
-            className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-            style={{ background: '#f5f0e8', color: '#1a1a1a' }}
-          />
-          <span className="text-xs shrink-0" style={{ color: '#9c8e7e' }}>{unit}</span>
-        </div>
-      </div>
-    )
-  }
+  const macroFields = [
+    { label: 'Protein', key: 'protein' as const, icon: Dumbbell, color: '#ec4899', bg: '#fce7f3' },
+    { label: 'Carbs',   key: 'carbs'   as const, icon: Wheat,    color: '#f97316', bg: '#fff3e0' },
+    { label: 'Fat',     key: 'fat'     as const, icon: Droplets, color: '#8b5cf6', bg: '#f3e8ff' },
+    { label: 'Fiber',   key: 'fiber'   as const, icon: Leaf,     color: '#00c853', bg: '#f0faf4' },
+  ]
 
   return (
     <div className="rounded-2xl overflow-hidden bg-white p-4 space-y-3" style={{ boxShadow: '0 2px 16px rgba(26,61,43,0.12)' }}>
@@ -151,12 +139,36 @@ export default function ManualFoodEntry({ onConfirm, onDiscard }: Props) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {numField('Calories', 'calories', 'kcal')}
-        {numField('Protein', 'protein', 'g')}
-        {numField('Carbs', 'carbs', 'g')}
-        {numField('Fat', 'fat', 'g')}
-        {numField('Fiber', 'fiber', 'g')}
+      {/* Calories */}
+      <div className="flex items-center gap-3 py-3 px-4 rounded-xl" style={{ background: '#fff3e0', border: '1px solid #fed7aa' }}>
+        <Flame className="w-5 h-5 flex-shrink-0" style={{ color: '#f97316' }} />
+        <input
+          type="number" min={0}
+          value={form.calories}
+          onChange={e => update('calories', e.target.value)}
+          placeholder="0"
+          className="text-2xl font-bold bg-transparent outline-none w-24 min-w-0"
+          style={{ color: '#ea580c' }}
+        />
+        <span className="text-sm font-medium" style={{ color: '#fb923c' }}>calories</span>
+      </div>
+
+      {/* Macros */}
+      <div className="grid grid-cols-4 gap-2">
+        {macroFields.map(({ label, key, icon: Icon, color, bg }) => (
+          <div key={key} className="flex flex-col items-center p-2.5 rounded-xl" style={{ background: bg }}>
+            <Icon className="w-4 h-4 mb-1" style={{ color }} />
+            <input
+              type="number" min={0}
+              value={form[key]}
+              onChange={e => update(key, e.target.value)}
+              placeholder="0"
+              className="w-full text-center font-bold text-sm bg-transparent outline-none"
+              style={{ color }}
+            />
+            <span className="text-[10px] mt-0.5" style={{ color: '#9c8e7e' }}>{label}</span>
+          </div>
+        ))}
       </div>
 
       {saveError && <p className="text-xs" style={{ color: '#e11d48' }}>{saveError}</p>}
