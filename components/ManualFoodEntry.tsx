@@ -133,14 +133,14 @@ export default function ManualFoodEntry({ onConfirm, onDiscard }: Props) {
       <div>
         <label className="block text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#9c8e7e' }}>Description (optional)</label>
         <div className="relative">
-          <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#00c853' }} />
-          <input
-            type="text"
+          <FileText className="absolute left-3 top-3 w-4 h-4" style={{ color: '#00c853' }} />
+          <textarea
             value={form.description}
             onChange={e => update('description', e.target.value)}
-            className="w-full pl-10 pr-3 py-2.5 rounded-xl text-sm outline-none"
+            rows={3}
+            className="w-full pl-10 pr-3 py-2.5 rounded-xl text-sm outline-none resize-none leading-relaxed"
             style={{ background: 'white', color: '#1a1a1a', border: '1.5px solid #d4f4dd' }}
-            placeholder="e.g. large bowl, homemade"
+            placeholder="e.g. large bowl, homemade, with olive oil dressing"
           />
         </div>
       </div>
@@ -153,8 +153,8 @@ export default function ManualFoodEntry({ onConfirm, onDiscard }: Props) {
           value={form.calories}
           onChange={e => update('calories', e.target.value)}
           placeholder="0"
-          className="text-2xl font-bold bg-transparent outline-none w-24 min-w-0"
-          style={{ color: '#ea580c' }}
+          className="text-2xl font-bold outline-none w-24 min-w-0 rounded-lg px-2 py-1"
+          style={{ color: '#ea580c', background: 'white', border: '1.5px solid #fed7aa' }}
         />
         <span className="text-sm font-medium" style={{ color: '#fb923c' }}>calories</span>
       </div>
@@ -163,16 +163,16 @@ export default function ManualFoodEntry({ onConfirm, onDiscard }: Props) {
       <div className="grid grid-cols-4 gap-2">
         {macroFields.map(({ label, key, icon: Icon, color, bg }) => (
           <div key={key} className="flex flex-col items-center p-2.5 rounded-xl" style={{ background: bg }}>
-            <Icon className="w-4 h-4 mb-1" style={{ color }} />
+            <Icon className="w-4 h-4 mb-1.5" style={{ color }} />
             <input
               type="number" min={0}
               value={form[key]}
               onChange={e => update(key, e.target.value)}
               placeholder="0"
-              className="w-full text-center font-bold text-sm bg-transparent outline-none"
-              style={{ color }}
+              className="w-full text-center font-bold text-sm outline-none rounded-lg py-1.5"
+              style={{ color, background: 'white', border: `1.5px solid ${color}40` }}
             />
-            <span className="text-[10px] mt-0.5" style={{ color: '#9c8e7e' }}>{label}</span>
+            <span className="text-[10px] mt-1" style={{ color: '#9c8e7e' }}>{label}</span>
           </div>
         ))}
       </div>
